@@ -1,0 +1,36 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Branch;
+use App\Models\Lead;
+use App\Models\Level;
+use App\Models\Package;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class LeadSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $branches = Branch::all();
+        $levels = Level::all();
+        $packages = Package::all();
+
+        if ($branches->isEmpty() || $levels->isEmpty() || $packages->isEmpty()) {
+            $this->command->warn('Branches, Levels, or Packages not found. Skipping LeadSeeder.');
+            return;
+        }
+
+        for ($i = 0; $i < 20; $i++) {
+            Lead::factory()->create([
+                'branch_id' => $branches->random()->id,
+                'interest_level_id' => $levels->random()->id,
+                'interest_package_id' => $packages->random()->id,
+            ]);
+        }
+    }
+}

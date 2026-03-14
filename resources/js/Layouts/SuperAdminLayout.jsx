@@ -1,0 +1,166 @@
+import React from "react";
+import { Link, usePage } from "@inertiajs/react";
+import {
+    LayoutDashboard,
+    Building2,
+    BookCopy,
+    Package,
+    Users,
+    UserCircle,
+    Settings,
+    ChevronFirst,
+    ChevronLast,
+} from "lucide-react";
+import Navbar from "@/Components/shared/Navbar";
+
+// IELC Logo
+const logoUrl = "/assets/images/local/IELC-Logo.webp";
+
+const menuItems = [
+    {
+        category: "Main",
+        items: [
+            {
+                icon: <LayoutDashboard size={20} />,
+                text: "Dashboard",
+                name: "dashboard",
+                href: route("dashboard"),
+            },
+        ],
+    },
+    {
+        category: "Management",
+        items: [
+            {
+                icon: <BookCopy size={20} />,
+                text: "Master",
+                href: route("superadmin.master.index"),
+                name: "superadmin.master.index",
+            },
+        ],
+    },
+    {
+        category: "Users",
+        items: [
+            {
+                icon: <Users size={20} />,
+                text: "Staff",
+                href: "#",
+                name: "staff",
+            },
+            {
+                icon: <UserCircle size={20} />,
+                text: "Students",
+                href: "#",
+                name: "students",
+            },
+        ],
+    },
+    {
+        category: "System",
+        items: [
+            {
+                icon: <Settings size={20} />,
+                text: "Settings",
+                href: "#",
+                name: "settings",
+            },
+        ],
+    },
+];
+
+const SidebarContext = React.createContext();
+
+export default function SuperAdminLayout({ children }) {
+    const [expanded, setExpanded] = React.useState(true);
+    const { auth } = usePage().props;
+
+    return (
+        <div className="flex">
+            <aside className="h-screen sticky top-0">
+                <nav className="h-full flex flex-col bg-black border-r border-gray-700 shadow-sm">
+                    <div
+                        className={`p-4 pb-2 flex justify-between items-center ${
+                            expanded ? "" : "pb-4"
+                        }`}
+                    >
+                        <img
+                            src={logoUrl}
+                            className={`overflow-hidden transition-all ${
+                                expanded ? "w-32" : "w-0"
+                            }`}
+                            alt="IELC Logo"
+                        />
+                        <button
+                            onClick={() => setExpanded((curr) => !curr)}
+                            className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300"
+                        >
+                            {expanded ? <ChevronFirst /> : <ChevronLast />}
+                        </button>
+                    </div>
+
+                    <SidebarContext.Provider value={{ expanded }}>
+                        <ul className="flex-1 px-3">
+                            {menuItems.map((group, index) => (
+                                <React.Fragment key={index}>
+                                    {group.category && expanded && (
+                                        <li className="px-3 pt-4 pb-2 text-xs font-semibold uppercase text-gray-400">
+                                            {group.category}
+                                        </li>
+                                    )}
+                                    {group.items.map((item, itemIndex) => (
+                                        <SidebarItem
+                                            key={itemIndex}
+                                            {...item}
+                                            active={route().current(item.name)}
+                                        />
+                                    ))}
+                                </React.Fragment>
+                            ))}
+                        </ul>
+                    </SidebarContext.Provider>
+                </nav>
+            </aside>
+            <main className="flex-1 bg-gray-50">
+                <Navbar user={auth.user} />
+                <div className="p-4">{children}</div>
+            </main>
+        </div>
+    );
+}
+
+export function SidebarItem({ icon, text, active, alert, href }) {
+    const { expanded } = React.useContext(SidebarContext);
+
+    return (
+        <Link
+            href={href}
+            className={`
+                relative flex items-center py-2 px-3 my-1
+                font-medium rounded-md cursor-pointer
+                transition-colors group
+                ${
+                    active
+                        ? "bg-primary-800 text-white"
+                        : "hover:bg-primary-900 text-gray-400 hover:text-gray-200"
+                }
+            `}
+        >
+            {icon}
+            <span
+                className={`overflow-hidden transition-all ${
+                    expanded ? "w-52 ml-3" : "w-0"
+                }`}
+            >
+                {text}
+            </span>
+            {alert && (
+                <div
+                    className={`absolute right-2 w-2 h-2 rounded bg-primary-400 ${
+                        expanded ? "" : "top-2"
+                    }`}
+                />
+            )}
+        </Link>
+    );
+}
