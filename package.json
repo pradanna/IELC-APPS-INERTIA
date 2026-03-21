@@ -24,6 +24,8 @@
     },
     "dependencies": {
         "lucide-react": "^0.577.0",
-        "react-select": "^5.10.2"
+        "react-datepicker": "^9.1.0",
+        "react-select": "^5.10.2",
+        "recharts": "^3.8.0"
     }
 }

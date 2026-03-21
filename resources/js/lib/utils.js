@@ -3,23 +3,21 @@
  * @param {string} status - The lead status (e.g., 'New', 'Contacted').
  * @returns {string} The corresponding badge type ('info', 'success', etc.).
  */
-export function getLeadStatusType(status) {
-    const lowerStatus = status?.toLowerCase() || "";
-    switch (lowerStatus) {
-        case "new":
-        case "contacted":
-            return "info";
-        case "qualified":
-            return "success";
-        case "lost":
-            return "danger";
-        case "pending":
-        case "scheduled":
-            return "warning";
-        default:
-            return "default";
-    }
-}
+
+const MONTHS = [
+    { value: 1, label: "January" },
+    { value: 2, label: "February" },
+    { value: 3, label: "March" },
+    { value: 4, label: "April" },
+    { value: 5, label: "May" },
+    { value: 6, label: "June" },
+    { value: 7, label: "July" },
+    { value: 8, label: "August" },
+    { value: 9, label: "September" },
+    { value: 10, label: "October" },
+    { value: 11, label: "November" },
+    { value: 12, label: "December" },
+];
 
 /**
  * Mengonversi sebuah string menjadi Title Case.

@@ -1,13 +1,19 @@
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition, Menu } from "@headlessui/react";
-import { X, User, ChevronDown } from "lucide-react";
-import Badge from "@/Components/ui/Badge";
-import { getLeadStatusType } from "@/lib/utils";
+import { X, User, ChevronDown, PhoneCall } from "lucide-react";
+import StatusBadge from "@/Components/ui/StatusBadge";
 import DetailLead from "./DetailLead";
 import History from "./History";
 import Whatsapp from "./Whatsapp";
 
-export default function LeadDetailPanel({ lead, open, onClose }) {
+export default function LeadDetailPanel({
+    lead,
+    open,
+    onClose,
+    leadStatuses = [],
+    onStatusUpdate,
+    onFollowupClick,
+}) {
     const [activeTab, setActiveTab] = useState("details");
 
     // Reset tab kembali ke 'details' setiap kali membuka lead baru
@@ -76,14 +82,45 @@ export default function LeadDetailPanel({ lead, open, onClose }) {
                                                         {lead?.name}
                                                     </h3>
                                                     <div className="flex items-center gap-x-2 mt-1">
-                                                        <Badge
-                                                            type={getLeadStatusType(
-                                                                lead?.status,
-                                                            )}
+                                                        {(() => {
+                                                            const currentStatus =
+                                                                leadStatuses.find(
+                                                                    (s) =>
+                                                                        s.id ===
+                                                                        lead?.lead_status_id,
+                                                                );
+
+                                                            if (!currentStatus)
+                                                                return null;
+
+                                                            return (
+                                                                <StatusBadge
+                                                                    backgroundColor={
+                                                                        currentStatus.bg_color
+                                                                    }
+                                                                    color={
+                                                                        currentStatus.text_color
+                                                                    }
+                                                                >
+                                                                    {currentStatus.name.toUpperCase()}
+                                                                </StatusBadge>
+                                                            );
+                                                        })()}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                onFollowupClick &&
+                                                                onFollowupClick(
+                                                                    lead,
+                                                                )
+                                                            }
+                                                            className="inline-flex items-center justify-center gap-x-1 rounded-md bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 shadow-sm ring-1 ring-inset ring-green-600/20 hover:bg-green-100 transition-colors"
                                                         >
-                                                            {lead?.status?.toUpperCase() ||
-                                                                ""}
-                                                        </Badge>
+                                                            <PhoneCall className="-ml-0.5 h-3.5 w-3.5 text-green-600" />
+                                                            <span>
+                                                                Follow-up
+                                                            </span>
+                                                        </button>
                                                         <Menu
                                                             as="div"
                                                             className="relative inline-block text-left"
@@ -109,38 +146,63 @@ export default function LeadDetailPanel({ lead, open, onClose }) {
                                                             >
                                                                 <Menu.Items className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                                     <div className="py-1">
-                                                                        {[
-                                                                            "New",
-                                                                            "Contacted",
-                                                                            "Qualified",
-                                                                            "Lost",
-                                                                        ].map(
+                                                                        {leadStatuses.map(
                                                                             (
                                                                                 status,
-                                                                            ) => (
-                                                                                <Menu.Item
-                                                                                    key={
-                                                                                        status
-                                                                                    }
-                                                                                >
-                                                                                    {({
-                                                                                        active,
-                                                                                    }) => (
-                                                                                        <a
-                                                                                            href="#"
-                                                                                            className={`${
-                                                                                                active
-                                                                                                    ? "bg-gray-100 text-gray-900"
-                                                                                                    : "text-gray-700"
-                                                                                            } block px-4 py-2 text-sm`}
-                                                                                        >
-                                                                                            {
-                                                                                                status
-                                                                                            }
-                                                                                        </a>
-                                                                                    )}
-                                                                                </Menu.Item>
-                                                                            ),
+                                                                            ) => {
+                                                                                const isCurrent =
+                                                                                    lead?.lead_status_id ===
+                                                                                    status.id;
+                                                                                return (
+                                                                                    <Menu.Item
+                                                                                        key={
+                                                                                            status.id
+                                                                                        }
+                                                                                        disabled={
+                                                                                            isCurrent
+                                                                                        }
+                                                                                    >
+                                                                                        {({
+                                                                                            active,
+                                                                                            disabled,
+                                                                                        }) => (
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={(
+                                                                                                    e,
+                                                                                                ) => {
+                                                                                                    if (
+                                                                                                        !disabled &&
+                                                                                                        onStatusUpdate
+                                                                                                    ) {
+                                                                                                        onStatusUpdate(
+                                                                                                            lead.id,
+                                                                                                            status.id,
+                                                                                                        );
+                                                                                                    }
+                                                                                                }}
+                                                                                                className={`${
+                                                                                                    active
+                                                                                                        ? "bg-gray-100 text-gray-900"
+                                                                                                        : "text-gray-700"
+                                                                                                } ${disabled ? "opacity-50 cursor-not-allowed" : ""} flex w-full items-center gap-2 px-4 py-2 text-sm text-left`}
+                                                                                            >
+                                                                                                <span
+                                                                                                    className="w-2 h-2 rounded-full border border-gray-300"
+                                                                                                    style={{
+                                                                                                        backgroundColor:
+                                                                                                            status.bg_color ||
+                                                                                                            "#d1d5db",
+                                                                                                    }}
+                                                                                                ></span>
+                                                                                                {
+                                                                                                    status.name
+                                                                                                }
+                                                                                            </button>
+                                                                                        )}
+                                                                                    </Menu.Item>
+                                                                                );
+                                                                            },
                                                                         )}
                                                                     </div>
                                                                 </Menu.Items>
@@ -211,7 +273,12 @@ export default function LeadDetailPanel({ lead, open, onClose }) {
                                                 )}
 
                                                 {activeTab === "history" && (
-                                                    <History lead={lead} />
+                                                    <History
+                                                        lead={lead}
+                                                        leadStatuses={
+                                                            leadStatuses
+                                                        }
+                                                    />
                                                 )}
 
                                                 {activeTab === "whatsapp" && (

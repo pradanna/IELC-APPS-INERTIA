@@ -4,13 +4,13 @@ use App\Http\Controllers\Crm\LeadController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
-use App\Http\Controllers\SuperAdmin\Master\MasterBranchController;
-use App\Http\Controllers\SuperAdmin\CrmController;
-use App\Http\Controllers\SuperAdmin\Master\MasterDataController;
-use App\Http\Controllers\SuperAdmin\Master\MasterLeadSourceController;
-use App\Http\Controllers\SuperAdmin\Master\MasterLevelController;
-use App\Http\Controllers\SuperAdmin\Master\MasterPackageController;
-use App\Http\Controllers\SuperAdmin\Master\LeadStatusController as MasterLeadStatusController;
+use App\Http\Controllers\Master\MasterBranchController;
+use App\Http\Controllers\Master\MasterDataController;
+use App\Http\Controllers\Master\MasterLeadSourceController;
+use App\Http\Controllers\Master\MasterLevelController;
+use App\Http\Controllers\Master\MasterPackageController;
+use App\Http\Controllers\Master\LeadStatusController as MasterLeadStatusController;
+use App\Http\Controllers\Master\MonthlyTargetController;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
 // 4. Role-Specific Route Groups
 Route::middleware(['auth', 'verified'])->group(function () {
 
+    // Route::get('/crm/follow-up', [FollowUpController::class, 'index'])->name('crm.follow-up.index');
+
     // -- SUPERADMIN --
     Route::middleware('can:superadmin')->prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/dashboard', SuperAdminDashboardController::class)->name('dashboard');
@@ -53,6 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/crm/leads/{lead}', [LeadController::class, 'update'])->name('crm.leads.update');
         Route::delete('/crm/leads/{lead}', [LeadController::class, 'destroy'])->name('crm.leads.destroy');
         Route::put('/crm/leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('crm.leads.status.update');
+        Route::post('/crm/leads/{lead}/followups', [LeadController::class, 'storeFollowup'])->name('crm.leads.followups.store');
 
         Route::post('/master/branches', [MasterBranchController::class, 'store'])->name('branches.store');
         Route::put('/master/branches/{branch}', [MasterBranchController::class, 'update'])->name('branches.update');
@@ -69,6 +72,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/master/lead-sources', [MasterLeadSourceController::class, 'store'])->name('lead-sources.store');
         Route::put('/master/lead-sources/{lead_source}', [MasterLeadSourceController::class, 'update'])->name('lead-sources.update');
         Route::delete('/master/lead-sources/{lead_source}', [MasterLeadSourceController::class, 'destroy'])->name('lead-sources.destroy');
+
+        Route::get('/master/monthly-targets', [MonthlyTargetController::class, 'index'])->name('monthly-targets.index');
+        Route::post('/master/monthly-targets', [MonthlyTargetController::class, 'store'])->name('monthly-targets.store');
+        Route::put('/master/monthly-targets/{monthlyTarget}', [MonthlyTargetController::class, 'update'])->name('monthly-targets.update');
+        Route::delete('/master/monthly-targets/{monthlyTarget}', [MonthlyTargetController::class, 'destroy'])->name('monthly-targets.destroy');
 
         Route::resource('/master/lead-statuses', MasterLeadStatusController::class)->names('master.lead-statuses');
     });

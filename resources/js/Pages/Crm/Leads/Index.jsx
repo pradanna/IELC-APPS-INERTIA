@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+    useState,
+    useEffect,
+    useCallback,
+    useRef,
+    useMemo,
+} from "react";
 import { Head, router, useForm } from "@inertiajs/react";
 import {
     Search,
@@ -21,18 +27,21 @@ import TextInput from "@/Components/ui/TextInput";
 import TextArea from "@/Components/ui/TextArea";
 import Select from "react-select";
 import { toTitleCase } from "@/lib/utils";
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function Index({
     auth,
     filters,
     stats,
-    timeline,
     leads,
     branches = [],
     leadSources = [],
     levels = [],
     packages = [],
     leadStatuses = [],
+    monthlyTarget = 0,
+    monthlyTargets = [],
 }) {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [searchTerm, setSearchTerm] = useState(filters.search || "");
@@ -42,6 +51,7 @@ export default function Index({
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [leadToEdit, setLeadToEdit] = useState(null);
     const [leadToDelete, setLeadToDelete] = useState(null);
+    const [leadToFollowup, setLeadToFollowup] = useState(null);
     const searchContainerRef = useRef(null);
 
     const { put, processing } = useForm(); // Untuk status update inline
@@ -59,6 +69,7 @@ export default function Index({
         lead_source_id: "",
         interest_level_id: "",
         interest_package_id: "",
+        temperature: "warm",
         notes: "",
     });
 
@@ -74,8 +85,31 @@ export default function Index({
         lead_source_id: "",
         interest_level_id: "",
         interest_package_id: "",
+        temperature: "warm",
         notes: "",
     });
+
+    const followupForm = useForm({
+        method: "whatsapp",
+        scheduled_at: "",
+        notes: "",
+        lead_status_id: "",
+    });
+
+    // Transformasi data untuk memetakan `lead_status_id` menjadi `status` (string)
+    // agar kompatibel dengan seluruh komponen UI yang masih membaca field .status
+    const mappedLeads = useMemo(() => {
+        return leads.map((lead) => {
+            const statusObj = leadStatuses.find(
+                (s) => s.id === lead.lead_status_id,
+            );
+            return {
+                ...lead,
+                // Fallback otomatis ke "new" jika relasi tidak ditemukan
+                status: statusObj ? statusObj.name.toLowerCase() : "new",
+            };
+        });
+    }, [leads, leadStatuses]);
 
     const handleCreateSubmit = (e) => {
         e.preventDefault();
@@ -127,16 +161,45 @@ export default function Index({
         );
     };
 
-    const handleStatusUpdate = (leadId, newStatus) => {
-        put(
-            route("superadmin.crm.leads.status.update", { lead: leadId }),
-            {
-                status: newStatus,
-            },
+    const handleFollowupClick = (lead) => {
+        followupForm.reset();
+        followupForm.setData({
+            method: "whatsapp",
+            scheduled_at: "",
+            notes: "",
+            lead_status_id: lead.lead_status_id || "",
+        });
+        setLeadToFollowup(lead);
+    };
+
+    const handleFollowupSubmit = (e) => {
+        e.preventDefault();
+        followupForm.post(
+            route("superadmin.crm.leads.followups.store", leadToFollowup.id),
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    // The page will auto-reload the new props, no need to manually update state
+                    setLeadToFollowup(null);
+                    followupForm.reset();
+                },
+            },
+        );
+    };
+
+    const handleStatusUpdate = (leadId, newStatus) => {
+        router.put(
+            route("superadmin.crm.leads.status.update", { lead: leadId }),
+            {
+                lead_status_id: newStatus,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: (page) => {
+                    // Toast akan otomatis muncul merespon page.props.flash dari server
+                },
+                onError: (errors) => {
+                    console.error("Inertia error triggered!", errors);
                 },
             },
         );
@@ -182,6 +245,18 @@ export default function Index({
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
 
+    // Syncs the selected lead detail panel with the latest data from props after an update.
+    useEffect(() => {
+        if (selectedLead) {
+            const updatedLead = mappedLeads.find(
+                (l) => l.id === selectedLead.id,
+            );
+            if (updatedLead) {
+                setSelectedLead(updatedLead);
+            }
+        }
+    }, [mappedLeads, selectedLead?.id]);
+
     // Tutup dropdown jika klik di luar
     useEffect(() => {
         function handleClickOutside(event) {
@@ -203,11 +278,18 @@ export default function Index({
         setIsDropdownOpen(false);
         setSearchTerm("");
         setDropdownResults([]);
-
+        // Ambil data lengkap dari server untuk memastikan data history dan follow-up termuat
         axios
             .get(route("superadmin.crm.leads.show", { lead: leadId }))
             .then((response) => {
                 setSelectedLead(response.data.data);
+            })
+            .catch((err) => {
+                console.error("Failed to fetch lead details", err);
+                // Berikan umpan balik visual kepada pengguna
+                alert(
+                    "Maaf, gagal memuat detail lead. Silakan coba beberapa saat lagi.",
+                );
             });
     };
 
@@ -228,6 +310,7 @@ export default function Index({
                     lead_source_id: leadData.lead_source_id || "",
                     interest_level_id: leadData.interest_level_id || "",
                     interest_package_id: leadData.interest_package_id || "",
+                    temperature: leadData.temperature || "warm",
                     notes: leadData.notes || "",
                 });
                 setLeadToEdit(leadData);
@@ -238,6 +321,13 @@ export default function Index({
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "table", label: "List View", icon: TableIcon },
         { id: "kanban", label: "Kanban Board", icon: KanbanSquare },
+    ];
+
+    const followupTemplates = [
+        "Tidak diangkat",
+        "Nomor tidak aktif",
+        "Minta pricelist",
+        "Minta jadwal trial",
     ];
 
     // Custom styling agar React-Select menyatu mulus dengan UI Tailwind Anda
@@ -371,22 +461,30 @@ export default function Index({
 
                 {/* Tab Content */}
                 {activeTab === "dashboard" && (
-                    <CrmDashboard stats={stats} timeline={timeline} />
+                    <CrmDashboard
+                        stats={stats}
+                        leads={mappedLeads}
+                        onRowDetailClick={handleShowLeadDetail}
+                        monthlyTarget={monthlyTarget}
+                        monthlyTargets={monthlyTargets}
+                        branches={branches}
+                    />
                 )}
                 {activeTab === "table" && (
                     <LeadTable
-                        leads={leads}
+                        leads={mappedLeads}
                         leadStatuses={leadStatuses}
                         onRowDetailClick={handleShowLeadDetail}
                         onEditClick={handleEditClick}
                         onDeleteClick={handleDeleteClick}
+                        onFollowupClick={handleFollowupClick}
                         onStatusUpdate={handleStatusUpdate}
                         processingStatusUpdate={processing}
                     />
                 )}
                 {activeTab === "kanban" && (
                     <LeadKanban
-                        leads={leads}
+                        leads={mappedLeads}
                         onCardClick={handleShowLeadDetail}
                         onEditClick={handleEditClick}
                         onDeleteClick={handleDeleteClick}
@@ -397,6 +495,9 @@ export default function Index({
                 lead={selectedLead}
                 open={!!selectedLead}
                 onClose={() => setSelectedLead(null)}
+                leadStatuses={leadStatuses}
+                onStatusUpdate={handleStatusUpdate}
+                onFollowupClick={handleFollowupClick}
             />
 
             {/* Create Lead Modal */}
@@ -485,19 +586,32 @@ export default function Index({
                         {/* Date of Birth */}
                         <div>
                             <InputLabel htmlFor="dob">Date of Birth</InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="dob"
-                                    type="date"
-                                    value={createForm.data.dob}
-                                    onChange={(e) =>
-                                        createForm.setData(
-                                            "dob",
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
+                            <ReactDatePicker
+                                id="edit_dob"
+                                selected={
+                                    createForm.data.dob
+                                        ? new Date(createForm.data.dob)
+                                        : null
+                                }
+                                onChange={(date) => {
+                                    const formattedDate = date
+                                        ? new Date(
+                                              date.getTime() -
+                                                  date.getTimezoneOffset() *
+                                                      60000,
+                                          )
+                                              .toISOString()
+                                              .split("T")[0]
+                                        : null;
+                                    createForm.setData("dob", formattedDate);
+                                }}
+                                dateFormat="dd/MM/yyyy"
+                                className="mt-1 block w-full rounded-lg border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                                // 👇 TAMBAHKAN 3 BARIS INI 👇
+                                showYearDropdown
+                                showMonthDropdown
+                                dropdownMode="select" // Mengubahnya jadi dropdown HTML standar yang gampang di-klik
+                            />
                         </div>
 
                         {/* Parent Name */}
@@ -729,6 +843,43 @@ export default function Index({
                                     }
                                     placeholder="Select Package"
                                     isClearable
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Temperature */}
+                        <div>
+                            <InputLabel htmlFor="temperature">
+                                Temperature
+                            </InputLabel>
+                            <div className="mt-1">
+                                <Select
+                                    id="temperature"
+                                    styles={reactSelectStyles}
+                                    menuPosition="fixed"
+                                    options={[
+                                        { value: "cold", label: "Cold" },
+                                        { value: "warm", label: "Warm" },
+                                        { value: "hot", label: "Hot" },
+                                    ]}
+                                    value={
+                                        [
+                                            { value: "cold", label: "Cold" },
+                                            { value: "warm", label: "Warm" },
+                                            { value: "hot", label: "Hot" },
+                                        ].find(
+                                            (opt) =>
+                                                opt.value ===
+                                                createForm.data.temperature,
+                                        ) || null
+                                    }
+                                    onChange={(opt) =>
+                                        createForm.setData(
+                                            "temperature",
+                                            opt ? opt.value : "warm",
+                                        )
+                                    }
                                     className="w-full"
                                 />
                             </div>
@@ -1094,6 +1245,43 @@ export default function Index({
                                 />
                             </div>
                         </div>
+
+                        {/* Temperature */}
+                        <div>
+                            <InputLabel htmlFor="edit_temperature">
+                                Temperature
+                            </InputLabel>
+                            <div className="mt-1">
+                                <Select
+                                    id="edit_temperature"
+                                    styles={reactSelectStyles}
+                                    menuPosition="fixed"
+                                    options={[
+                                        { value: "cold", label: "Cold" },
+                                        { value: "warm", label: "Warm" },
+                                        { value: "hot", label: "Hot" },
+                                    ]}
+                                    value={
+                                        [
+                                            { value: "cold", label: "Cold" },
+                                            { value: "warm", label: "Warm" },
+                                            { value: "hot", label: "Hot" },
+                                        ].find(
+                                            (opt) =>
+                                                opt.value ===
+                                                editForm.data.temperature,
+                                        ) || null
+                                    }
+                                    onChange={(opt) =>
+                                        editForm.setData(
+                                            "temperature",
+                                            opt ? opt.value : "warm",
+                                        )
+                                    }
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     {/* Notes */}
@@ -1162,6 +1350,141 @@ export default function Index({
                         </button>
                     </div>
                 </div>
+            </Modal>
+
+            {/* Follow-up Lead Modal */}
+            <Modal
+                show={!!leadToFollowup}
+                onClose={() => setLeadToFollowup(null)}
+                title={`Follow-up: ${leadToFollowup?.name}`}
+            >
+                <form onSubmit={handleFollowupSubmit} className="space-y-4">
+                    <div>
+                        <InputLabel
+                            htmlFor="followup_status"
+                            value="Update Status"
+                        />
+                        <div className="mt-1">
+                            <select
+                                id="followup_status"
+                                value={followupForm.data.lead_status_id}
+                                onChange={(e) =>
+                                    followupForm.setData(
+                                        "lead_status_id",
+                                        e.target.value,
+                                    )
+                                }
+                                className="block w-full rounded-lg border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                            >
+                                {leadStatuses.map((status) => (
+                                    <option key={status.id} value={status.id}>
+                                        {status.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel
+                            htmlFor="followup_method"
+                            value="Follow-up Method"
+                        />
+                        <div className="mt-1">
+                            <select
+                                id="followup_method"
+                                value={followupForm.data.method}
+                                onChange={(e) =>
+                                    followupForm.setData(
+                                        "method",
+                                        e.target.value,
+                                    )
+                                }
+                                className="block w-full rounded-lg border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
+                            >
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="call">Phone Call</option>
+                                <option value="email">Email</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel
+                            htmlFor="scheduled_at"
+                            value="Next Schedule"
+                        />
+                        <div className="mt-1">
+                            <TextInput
+                                id="scheduled_at"
+                                type="datetime-local"
+                                value={followupForm.data.scheduled_at}
+                                onChange={(e) =>
+                                    followupForm.setData(
+                                        "scheduled_at",
+                                        e.target.value,
+                                    )
+                                }
+                                className="w-full"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="followup_notes" value="Notes" />
+                        <div className="mt-2 mb-3 flex flex-wrap gap-2">
+                            {followupTemplates.map((template, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => {
+                                        const currentNotes =
+                                            followupForm.data.notes || "";
+                                        const newNotes = currentNotes.trim()
+                                            ? `${currentNotes.trim()}\n- ${template}`
+                                            : `- ${template}`;
+                                        followupForm.setData("notes", newNotes);
+                                    }}
+                                    className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 hover:bg-blue-100 transition-colors"
+                                >
+                                    + {template}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="mt-1">
+                            <TextArea
+                                id="followup_notes"
+                                rows={3}
+                                value={followupForm.data.notes}
+                                onChange={(e) =>
+                                    followupForm.setData(
+                                        "notes",
+                                        e.target.value,
+                                    )
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        <button
+                            type="submit"
+                            disabled={followupForm.processing}
+                            className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50"
+                        >
+                            {followupForm.processing
+                                ? "Saving..."
+                                : "Save Follow-up"}
+                        </button>
+                        <button
+                            type="button"
+                            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                            onClick={() => setLeadToFollowup(null)}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </Modal>
         </SuperAdminLayout>
     );

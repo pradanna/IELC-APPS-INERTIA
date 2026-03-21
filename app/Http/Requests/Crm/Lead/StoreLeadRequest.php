@@ -32,6 +32,7 @@ class StoreLeadRequest extends FormRequest
             'interest_level_id' => ['nullable', 'exists:levels,id'],
             'interest_package_id' => ['nullable', 'exists:packages,id'],
             'notes' => ['nullable', 'string'],
+            'temperature' => ['nullable', 'string', 'in:cold,warm,hot'],
         ];
     }
 

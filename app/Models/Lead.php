@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Lead extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -31,6 +33,7 @@ class Lead extends Model
         'interest_level_id',
         'interest_package_id',
         'temperature',
+        'joined_at',
     ];
 
     /**
@@ -40,6 +43,7 @@ class Lead extends Model
      */
     protected $casts = [
         'dob' => 'date',
+        'joined_at' => 'datetime',
     ];
 
     /**
@@ -80,5 +84,28 @@ class Lead extends Model
     public function leadStatus(): BelongsTo
     {
         return $this->belongsTo(LeadStatus::class);
+    }
+
+
+    /**
+     * Get the follow-ups for the lead.
+     */
+    public function followups()
+    {
+        // Sesuaikan 'LeadFollowup::class' dengan nama model follow-up Anda jika berbeda
+        return $this->hasMany(\App\Models\LeadFollowup::class);
+    }
+
+    /**
+     * Get the options for the activity log.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            // Tentukan secara spesifik field yang penting untuk di-log perubahannya
+            ->logOnly(['lead_status_id', 'branch_id', 'name', 'phone', 'lead_source_id', 'notes'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Lead has been {$eventName}");
     }
 }

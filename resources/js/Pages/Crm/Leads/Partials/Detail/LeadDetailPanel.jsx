@@ -1,7 +1,7 @@
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, User } from "lucide-react";
-import Badge from "@/Components/ui/Badge";
+import StatusBadge from "@/Components/ui/StatusBadge";
 import { DetailLead, History, Whatsapp } from "./Index";
 
 export default function LeadDetailPanel({ lead, open, onClose }) {
@@ -72,10 +72,32 @@ export default function LeadDetailPanel({ lead, open, onClose }) {
                                                     <h3 className="text-lg font-bold text-gray-900">
                                                         {lead?.name}
                                                     </h3>
-                                                    <Badge type="default">
-                                                        {lead?.status?.toUpperCase() ||
-                                                            ""}
-                                                    </Badge>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <StatusBadge>
+                                                            {lead?.status?.toUpperCase() ||
+                                                                ""}
+                                                        </StatusBadge>
+                                                        {lead?.temperature && (
+                                                            <span
+                                                                className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                                                                    lead.temperature ===
+                                                                    "hot"
+                                                                        ? "bg-red-50 text-red-700 ring-red-600/20"
+                                                                        : lead.temperature ===
+                                                                            "warm"
+                                                                          ? "bg-amber-50 text-amber-700 ring-amber-600/20"
+                                                                          : "bg-blue-50 text-blue-700 ring-blue-600/20"
+                                                                }`}
+                                                            >
+                                                                {lead.temperature
+                                                                    .charAt(0)
+                                                                    .toUpperCase() +
+                                                                    lead.temperature.slice(
+                                                                        1,
+                                                                    )}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
 

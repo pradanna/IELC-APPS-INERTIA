@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, PhoneCall } from "lucide-react";
 
 const TableIconButton = ({ type, onClick }) => {
     // Konfigurasi dinamis berdasarkan tipe tombol
@@ -21,6 +21,12 @@ const TableIconButton = ({ type, onClick }) => {
             tooltip: "Hapus Data",
             // Background merah soft (100), text merah (600)
             style: "text-red-600 bg-red-100 hover:bg-red-200",
+        },
+        followup: {
+            icon: PhoneCall,
+            tooltip: "Follow-up",
+            // Background hijau soft (100), text hijau (600)
+            style: "text-green-600 bg-green-100 hover:bg-green-200",
         },
     };
 

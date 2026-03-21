@@ -93,7 +93,7 @@ export default function DetailLead({ lead }) {
                 <DetailRow
                     icon={Briefcase}
                     label="Interested Package"
-                    value={lead?.interest_package}
+                    value={lead?.interest_package?.name}
                 />
             </div>
 
@@ -102,9 +102,7 @@ export default function DetailLead({ lead }) {
                 <div className="space-y-2 border-t border-gray-200 pt-5">
                     <div className="flex items-center gap-3">
                         <StickyNote className="h-4 w-4 text-gray-400 shrink-0" />
-                        <p className="text-sm text-gray-500">
-                            Notes
-                        </p>
+                        <p className="text-sm text-gray-500">Notes</p>
                     </div>
                     <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md border border-gray-200 whitespace-pre-wrap">
                         {lead?.notes}

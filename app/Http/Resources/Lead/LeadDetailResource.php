@@ -25,10 +25,31 @@ class LeadDetailResource extends JsonResource
             'notes' => $this->notes,
             'parent_name' => $this->parent_name,
             'parent_phone' => $this->parent_phone,
+            'temperature' => $this->temperature,
             'created_at' => $this->created_at->format('d M Y, H:i'),
             'branch' => $this->whenLoaded('branch', fn() => $this->branch->name),
             'interest_package' => $this->whenLoaded('interestPackage', fn() => $this->interestPackage?->name),
             'lead_source' => $this->whenLoaded('leadSource', fn() => $this->leadSource?->name),
+
+            'activities' => $this->whenLoaded('activities', function () {
+                return $this->activities->map(function ($activity) {
+                    return [
+                        'id' => $activity->id,
+                        'description' => $activity->description,
+                        'event' => $activity->event,
+                        'properties' => $activity->properties,
+                        'created_at' => $activity->created_at,
+                        // Ambil nama user (causer) yang melakukan aksi
+                        'causer' => $activity->causer ? [
+                            'id' => $activity->causer->id,
+                            'name' => $activity->causer->name,
+                        ] : null,
+                    ];
+                });
+            }),
+
+            // 2. Pastikan followups juga dikembalikan
+            'followups' => $this->whenLoaded('followups'),
         ];
     }
 }

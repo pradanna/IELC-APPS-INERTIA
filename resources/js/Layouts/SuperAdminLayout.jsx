@@ -11,6 +11,7 @@ import {
     ChevronFirst,
     ChevronLast,
     Headset,
+    PhoneCall,
 } from "lucide-react";
 import Navbar from "@/Components/shared/Navbar";
 import Toast from "@/Components/ui/Toast";
@@ -34,6 +35,12 @@ const menuItems = [
                 href: route("superadmin.crm.leads.index"),
                 name: "superadmin.crm.leads.*",
             },
+            // {
+            //     icon: <PhoneCall size={20} />,
+            //     text: "Follow Up",
+            //     href: route("crm.follow-up.index"),
+            //     name: "crm.follow-up.index",
+            // },
         ],
     },
     {

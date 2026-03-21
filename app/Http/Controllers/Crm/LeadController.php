@@ -7,13 +7,17 @@ use App\Actions\Crm\Lead\SearchLeadsAction;
 use App\Actions\Crm\Lead\StoreLeadAction;
 use App\Actions\Crm\Lead\ExportLeadsAction;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Master\LeadStatus\StoreLeadStatusRequest;
-use App\Http\Requests\Master\LeadStatus\UpdateLeadStatusRequest;
+use App\Http\Requests\Crm\Lead\StoreLeadRequest;
+use App\Http\Requests\Crm\Lead\UpdateLeadStatusRequest;
 use App\Http\Resources\Lead\LeadDetailResource as LeadLeadDetailResource;
 use App\Models\Lead;
+use App\Http\Requests\Crm\Lead\StoreLeadFollowupRequest;
+use App\Actions\Crm\Lead\StoreLeadFollowupAction;
+use App\Models\MonthlyTarget;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class LeadController extends Controller
@@ -38,36 +42,24 @@ class LeadController extends Controller
         }
 
         // Fetch leads with related data
-        $leads = $query->with(['interestLevel', 'interestPackage'])
+        $leads = $query->with(['interestLevel', 'interestPackage', 'activities.causer', 'followups.user'])
             ->latest()
             ->get();
 
-        // --- Stats Calculation with Timeline ---
-        $timeline = $request->input('timeline', 'today'); // Default to 'today'
         $baseStatsQuery = Lead::query();
+        $targetQuery = MonthlyTarget::where('month', now()->month)
+            ->where('year', now()->year);
 
         // Scope stats by branch for frontdesk
         if ($user->role === 'frontdesk' && $user->frontdesk) {
             $baseStatsQuery->where('branch_id', $user->frontdesk->branch_id);
+            $targetQuery->where('branch_id', $user->frontdesk->branch_id);
         }
 
-        // Apply timeline scoping
-        switch ($timeline) {
-            case 'today':
-                $baseStatsQuery->whereDate('created_at', today());
-                break;
-            case 'week':
-                $baseStatsQuery->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
-                break;
-            case 'month':
-                $baseStatsQuery->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
-                break;
-                // No default case needed, will return all if timeline is invalid
-        }
+
 
         return Inertia::render('Crm/Leads/Index', [
             'filters' => $request->only('search'),
-            'timeline' => $timeline, // Pass the current timeline to the view
             'stats' => [
                 'total' => (clone $baseStatsQuery)->count(),
                 'new' => (clone $baseStatsQuery)->where('lead_status_id', 1)->count(),
@@ -75,11 +67,14 @@ class LeadController extends Controller
                 'enrolled' => (clone $baseStatsQuery)->where('lead_status_id', 5)->count(), // 5 = Joined
                 'lost' => (clone $baseStatsQuery)->where('lead_status_id', 6)->count(),
             ],
+            'monthlyTarget' => (int) $targetQuery->sum('target_enrolled'),
+            'monthlyTargets' => $targetQuery->get(),
             'leads' => $leads,
             'branches' => \App\Models\Branch::all(),
             'leadSources' => \App\Models\LeadSource::all(),
             'levels' => \App\Models\Level::all(),
             'packages' => \App\Models\Package::all(),
+            'leadStatuses' => \App\Models\LeadStatus::all(),
         ]);
     }
 
@@ -109,17 +104,24 @@ class LeadController extends Controller
     public function show(Lead $lead)
     {
         // Eager load relationships needed for the detail view
-        $lead->load(['branch', 'interestPackage', 'leadSource']);
+        $lead->load(['branch', 'interestPackage', 'leadSource', 'activities.causer', 'followups.user']);
 
         // Return the lead detail using a resource
         return new LeadLeadDetailResource($lead);
     }
 
-    public function store(StoreLeadStatusRequest $request, StoreLeadAction $action): RedirectResponse
+    public function store(StoreLeadRequest $request, StoreLeadAction $action): RedirectResponse
     {
         $action->execute($request->validated());
 
         return Redirect::back()->with('success', 'Lead created successfully.');
+    }
+
+    public function storeFollowup(StoreLeadFollowupRequest $request, Lead $lead, StoreLeadFollowupAction $action): RedirectResponse
+    {
+        $action->execute($lead, $request->validated(), $request->user()->id);
+
+        return Redirect::back()->with('success', 'Follow-up scheduled successfully.');
     }
 
     /**
@@ -135,10 +137,15 @@ class LeadController extends Controller
         Lead $lead,
         UpdateLeadStatus $action
     ): RedirectResponse {
-        $action->execute($lead, $request->validated()['status']);
+        try {
+            $validatedData = $request->validated();
+            Log::info("Memulai proses update status untuk Lead #{$lead->id}", $validatedData);
 
-        // Redirect back with a success message.
-        // The frontend will receive this and can show a toast notification.
-        return Redirect::back()->with('success', 'Lead status updated.');
+            $action->execute($lead, $validatedData['lead_status_id']);
+            return Redirect::back()->with('success', 'Lead status updated.');
+        } catch (\Exception $e) {
+            Log::error("Error saat mengupdate status Lead #{$lead->id}: " . $e->getMessage());
+            return Redirect::back()->withErrors(['error' => 'Terjadi kesalahan sistem saat mengubah status.']);
+        }
     }
 }

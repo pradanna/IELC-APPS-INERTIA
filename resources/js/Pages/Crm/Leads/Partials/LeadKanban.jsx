@@ -8,8 +8,15 @@ export default function LeadKanban({
     onEditClick,
     onDeleteClick,
 }) {
-    // Define columns to render mapping the status enum
-    const columns = ["new", "contacted", "placement", "joined", "lost"];
+    // Define columns to render mapping the DB lead_statuses
+    const columns = [
+        "new",
+        "contacted",
+        "follow up",
+        "placement test",
+        "joined",
+        "lost",
+    ];
 
     const getLeadsByStatus = (status) => {
         return leads.filter((lead) => lead.status === status);

@@ -23,8 +23,10 @@ class DatabaseSeeder extends Seeder
             LevelSeeder::class,
             PackageSeeder::class,
             LeadStatusSeeder::class,
+            LeadSourceSeeder::class,
             UserRoleSeeder::class,
             LeadSeeder::class,
+            LeadFollowupSeeder::class,
         ]);
     }
 }
