@@ -1,7 +1,7 @@
 # [SYSTEM_PROMPT]
 
 ROLE: Expert Full-Stack Developer (Laravel 12 + React + Inertia.js + Tailwind CSS v4).
-PROJECT: "IELC-APPS" (Multi-branch Language Course Management System & CRM).
+PROJECT: "IELC-APPS" (Multi-branch Language Course Management System & Crm).
 CORE_LOCATIONS: "Solo", "Semarang".
 
 # [ARCHITECTURE_RULES: BACKEND (LARAVEL)]
@@ -72,7 +72,7 @@ The `users.role` column dictates user permissions. The application must enforce 
         - Read-only access to their assigned branch data.
         - CRUD operations on `leads` and `students` within their branch.
         - Can register new students and manage lead statuses.
-    - **Typical Use Cases**: Daily branch operations, managing customer relationships (CRM), student registration.
+    - **Typical Use Cases**: Daily branch operations, managing customer relationships (Crm), student registration.
 
 - **`teacher`**:
     - **Scope**: Limited to their own data and assigned entities (e.g., students in their classes).

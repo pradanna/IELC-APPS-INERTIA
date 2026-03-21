@@ -8,20 +8,30 @@ import TextArea from "@/Components/ui/TextArea";
 import TextInput from "@/Components/ui/TextInput";
 import { useForm } from "@inertiajs/react";
 import React, { useState } from "react";
+import SearchInput from "@/Components/ui/SearchInput";
+import { toTitleCase } from "@/lib/utils";
 
 export default function BranchesTable({ branches }) {
     const [isOpen, setIsOpen] = useState(false);
     const [branchToDelete, setBranchToDelete] = useState(null);
+    const [branchToEdit, setBranchToEdit] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         phone: "",
         address: "",
     });
     const deleteForm = useForm();
+    const editForm = useForm({
+        name: "",
+        phone: "",
+        address: "",
+    });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("branches.store"), {
+        post(route("superadmin.branches.store"), {
             onSuccess: () => {
                 reset();
                 setIsOpen(false);
@@ -30,9 +40,31 @@ export default function BranchesTable({ branches }) {
     };
 
     const handleDeleteBranch = () => {
-        deleteForm.delete(route("branches.destroy", branchToDelete.id), {
-            preserveScroll: true,
-            onSuccess: () => setBranchToDelete(null),
+        deleteForm.delete(
+            route("superadmin.branches.destroy", branchToDelete.id),
+            {
+                preserveScroll: true,
+                onSuccess: () => setBranchToDelete(null),
+            },
+        );
+    };
+
+    const handleEditClick = (branch) => {
+        editForm.setData({
+            name: branch.name,
+            phone: branch.phone,
+            address: branch.address,
+        });
+        setBranchToEdit(branch);
+    };
+
+    const handleEditSubmit = (e) => {
+        e.preventDefault();
+        editForm.put(route("superadmin.branches.update", branchToEdit.id), {
+            onSuccess: () => {
+                setBranchToEdit(null);
+                editForm.reset();
+            },
         });
     };
 
@@ -49,7 +81,7 @@ export default function BranchesTable({ branches }) {
                 <div className="flex justify-end gap-3">
                     <TableIconButton
                         type="edit"
-                        href="#"
+                        onClick={() => handleEditClick(row)}
                         className="text-primary-600 hover:text-primary-900"
                     >
                         Edit
@@ -66,6 +98,13 @@ export default function BranchesTable({ branches }) {
         },
     ];
 
+    const filteredBranches = branches.filter((branch) => {
+        const query = searchQuery.toLowerCase();
+        const matchName = branch.name?.toLowerCase().includes(query);
+        const matchAddress = branch.address?.toLowerCase().includes(query);
+        return matchName || matchAddress;
+    });
+
     return (
         <>
             <Panel
@@ -81,7 +120,17 @@ export default function BranchesTable({ branches }) {
                     </button>
                 }
             >
-                <DataTable data={branches} columns={columns} />
+                <DataTable
+                    data={filteredBranches}
+                    columns={columns}
+                    filterSection={
+                        <SearchInput
+                            placeholder="Cari berdasarkan nama atau alamat..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    }
+                />
             </Panel>
 
             <Modal
@@ -98,7 +147,7 @@ export default function BranchesTable({ branches }) {
                                 name="name"
                                 value={data.name}
                                 onChange={(e) =>
-                                    setData("name", e.target.value)
+                                    setData("name", toTitleCase(e.target.value))
                                 }
                                 isFocused={true}
                             />
@@ -197,6 +246,93 @@ export default function BranchesTable({ branches }) {
                         </Button>
                     </div>
                 </div>
+            </Modal>
+
+            <Modal
+                show={!!branchToEdit}
+                onClose={() => setBranchToEdit(null)}
+                title="Edit Branch"
+            >
+                <form onSubmit={handleEditSubmit} className="space-y-4">
+                    <div>
+                        <InputLabel htmlFor="edit_name" value="Name" />
+                        <div className="mt-1">
+                            <TextInput
+                                id="edit_name"
+                                name="name"
+                                value={editForm.data.name}
+                                onChange={(e) =>
+                                    editForm.setData(
+                                        "name",
+                                        toTitleCase(e.target.value),
+                                    )
+                                }
+                                isFocused={true}
+                            />
+                            {editForm.errors.name && (
+                                <p className="mt-1 text-xs text-red-600">
+                                    {editForm.errors.name}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="edit_phone" value="Phone" />
+                        <div className="mt-1">
+                            <TextInput
+                                id="edit_phone"
+                                name="phone"
+                                value={editForm.data.phone}
+                                onChange={(e) =>
+                                    editForm.setData("phone", e.target.value)
+                                }
+                            />
+                            {editForm.errors.phone && (
+                                <p className="mt-1 text-xs text-red-600">
+                                    {editForm.errors.phone}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="edit_address" value="Address" />
+                        <div className="mt-1">
+                            <TextArea
+                                id="edit_address"
+                                name="address"
+                                rows={3}
+                                value={editForm.data.address}
+                                onChange={(e) =>
+                                    editForm.setData("address", e.target.value)
+                                }
+                            />
+                            {editForm.errors.address && (
+                                <p className="mt-1 text-xs text-red-600">
+                                    {editForm.errors.address}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        <button
+                            type="submit"
+                            disabled={editForm.processing}
+                            className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50"
+                        >
+                            {editForm.processing ? "Saving..." : "Save Changes"}
+                        </button>
+                        <button
+                            type="button"
+                            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                            onClick={() => setBranchToEdit(null)}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </Modal>
         </>
     );

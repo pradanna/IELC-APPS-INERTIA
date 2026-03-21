@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Branch;
 use App\Models\Lead;
+use App\Models\LeadStatus;
 use App\Models\Level;
 use App\Models\Package;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -19,9 +20,10 @@ class LeadSeeder extends Seeder
         $branches = Branch::all();
         $levels = Level::all();
         $packages = Package::all();
+        $statuses = LeadStatus::all();
 
-        if ($branches->isEmpty() || $levels->isEmpty() || $packages->isEmpty()) {
-            $this->command->warn('Branches, Levels, or Packages not found. Skipping LeadSeeder.');
+        if ($branches->isEmpty() || $levels->isEmpty() || $packages->isEmpty() || $statuses->isEmpty()) {
+            $this->command->warn('Branches, Levels, Packages or Lead Statuses not found. Skipping LeadSeeder.');
             return;
         }
 
@@ -30,6 +32,7 @@ class LeadSeeder extends Seeder
                 'branch_id' => $branches->random()->id,
                 'interest_level_id' => $levels->random()->id,
                 'interest_package_id' => $packages->random()->id,
+                'lead_status_id' => $statuses->random()->id,
             ]);
         }
     }

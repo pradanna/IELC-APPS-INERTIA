@@ -7,6 +7,7 @@ import BranchesTable from "./Partials/BranchesTable";
 import LevelsTable from "./Partials/LevelsTable";
 import PackagesTable from "./Partials/PackagesTable";
 import LeadSourcesTable from "./Partials/LeadSourcesTable";
+import LeadStatusesTable from "./Partials/LeadStatusesTable";
 
 export default function Index({
     auth,
@@ -14,6 +15,7 @@ export default function Index({
     levels,
     packages,
     leadSources,
+    lead_statuses,
 }) {
     const tabs = [
         {
@@ -37,6 +39,11 @@ export default function Index({
             name: "lead_sources",
             label: "Lead Sources",
             content: <LeadSourcesTable leadSources={leadSources.data} />,
+        },
+        {
+            name: "lead_statuses",
+            label: "Lead Statuses",
+            content: <LeadStatusesTable leadStatuses={lead_statuses.data} />,
         },
     ];
 

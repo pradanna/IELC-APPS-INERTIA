@@ -26,9 +26,11 @@ class Lead extends Model
         'parent_name',
         'parent_phone',
         'lead_source_id',
-        'status',
+        'lead_status_id',
         'notes',
         'interest_level_id',
+        'interest_package_id',
+        'temperature',
     ];
 
     /**
@@ -57,6 +59,14 @@ class Lead extends Model
     }
 
     /**
+     * Get the package the lead is interested in.
+     */
+    public function interestPackage(): BelongsTo
+    {
+        return $this->belongsTo(Package::class, 'interest_package_id');
+    }
+
+    /**
      * Get the source of the lead.
      */
     public function leadSource(): BelongsTo
@@ -65,14 +75,10 @@ class Lead extends Model
     }
 
     /**
-     * Scope a query to only include leads with a specific status.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $status
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Get the status of the lead.
      */
-    public function scopeStatus(Builder $query, string $status): Builder
+    public function leadStatus(): BelongsTo
     {
-        return $query->where('status', $status);
+        return $this->belongsTo(LeadStatus::class);
     }
 }

@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             BranchSeeder::class,
             LevelSeeder::class,
             PackageSeeder::class,
+            LeadStatusSeeder::class,
             UserRoleSeeder::class,
             LeadSeeder::class,
         ]);

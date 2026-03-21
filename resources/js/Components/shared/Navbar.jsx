@@ -20,7 +20,7 @@ export default function Navbar({ user }) {
                         type="text"
                         name="search"
                         id="search"
-                        className="block w-full rounded-lg border-gray-200 pl-10 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                        className="block w-full rounded-lg focus:outline-none py-3 border-gray-200 pl-10 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                         placeholder="Search everything..."
                     />
                 </div>

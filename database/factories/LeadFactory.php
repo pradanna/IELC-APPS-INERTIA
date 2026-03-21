@@ -25,7 +25,7 @@ class LeadFactory extends Factory
             'parent_name' => fake()->name('female'),
             'parent_phone' => fake()->phoneNumber(),
             'lead_source_id' => \App\Models\LeadSource::factory(),
-            'status' => fake()->randomElement(['new', 'contacted', 'follow_up', 'placement_test', 'joined', 'lost']),
+            'lead_status_id' => 1,
             'notes' => fake()->sentence(),
         ];
     }

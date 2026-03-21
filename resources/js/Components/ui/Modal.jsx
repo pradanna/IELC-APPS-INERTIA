@@ -1,6 +1,12 @@
 import React, { useEffect } from "react";
 
-export default function Modal({ show, onClose, title, children }) {
+export default function Modal({
+    show,
+    onClose,
+    title,
+    maxWidth = "lg",
+    children,
+}) {
     useEffect(() => {
         if (show) {
             document.body.style.overflow = "hidden";
@@ -13,6 +19,17 @@ export default function Modal({ show, onClose, title, children }) {
     }, [show]);
 
     if (!show) return null;
+
+    const maxWidthClass =
+        {
+            sm: "sm:max-w-sm",
+            md: "sm:max-w-md",
+            lg: "sm:max-w-lg",
+            xl: "sm:max-w-xl",
+            "2xl": "sm:max-w-2xl",
+            "3xl": "sm:max-w-3xl",
+            "4xl": "sm:max-w-4xl",
+        }[maxWidth] || "sm:max-w-lg";
 
     return (
         <div
@@ -30,7 +47,9 @@ export default function Modal({ show, onClose, title, children }) {
 
             {/* Modal Panel */}
             <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div className="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl ring-1 ring-gray-900/5 transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div
+                    className={`relative transform overflow-visible rounded-xl bg-white text-left shadow-2xl ring-1 ring-gray-900/5 transition-all sm:my-8 sm:w-full ${maxWidthClass}`}
+                >
                     {/* Header */}
                     {title && (
                         <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-3 sm:px-6">

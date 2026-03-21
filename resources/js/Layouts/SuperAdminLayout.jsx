@@ -10,8 +10,10 @@ import {
     Settings,
     ChevronFirst,
     ChevronLast,
+    Headset,
 } from "lucide-react";
 import Navbar from "@/Components/shared/Navbar";
+import Toast from "@/Components/ui/Toast";
 
 // IELC Logo
 const logoUrl = "/assets/images/local/IELC-Logo.webp";
@@ -25,6 +27,12 @@ const menuItems = [
                 text: "Dashboard",
                 name: "dashboard",
                 href: route("dashboard"),
+            },
+            {
+                icon: <Headset size={20} />,
+                text: "Crm",
+                href: route("superadmin.crm.leads.index"),
+                name: "superadmin.crm.leads.*",
             },
         ],
     },
@@ -77,7 +85,7 @@ export default function SuperAdminLayout({ children }) {
 
     return (
         <div className="flex">
-            <aside className="h-screen sticky top-0">
+            <aside className="h-screen sticky top-0 z-50">
                 <nav className="h-full flex flex-col bg-black border-r border-gray-700 shadow-sm">
                     <div
                         className={`p-4 pb-2 flex justify-between items-center ${
@@ -123,6 +131,7 @@ export default function SuperAdminLayout({ children }) {
             </aside>
             <main className="flex-1 bg-gray-50">
                 <Navbar user={auth.user} />
+                <Toast />
                 <div className="p-4">{children}</div>
             </main>
         </div>
