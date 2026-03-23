@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Crm;
 use App\Actions\Crm\Lead\UpdateLeadStatus;
 use App\Actions\Crm\Lead\SearchLeadsAction;
 use App\Actions\Crm\Lead\StoreLeadAction;
+use App\Actions\Crm\Lead\UpdateLeadAction;
 use App\Actions\Crm\Lead\ExportLeadsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Crm\Lead\StoreLeadRequest;
@@ -115,6 +116,13 @@ class LeadController extends Controller
         $action->execute($request->validated());
 
         return Redirect::back()->with('success', 'Lead created successfully.');
+    }
+
+    public function update(Request $request, Lead $lead, UpdateLeadAction $action): RedirectResponse
+    {
+        $action->execute($lead, $request->all());
+
+        return Redirect::back()->with('success', 'Lead updated successfully.');
     }
 
     public function storeFollowup(StoreLeadFollowupRequest $request, Lead $lead, StoreLeadFollowupAction $action): RedirectResponse

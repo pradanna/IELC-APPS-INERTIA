@@ -12,6 +12,7 @@ import {
     ChevronLast,
     Headset,
     PhoneCall,
+    FileText,
 } from "lucide-react";
 import Navbar from "@/Components/shared/Navbar";
 import Toast from "@/Components/ui/Toast";
@@ -26,7 +27,7 @@ const menuItems = [
             {
                 icon: <LayoutDashboard size={20} />,
                 text: "Dashboard",
-                name: "dashboard",
+                name: "superadmin.dashboard",
                 href: route("dashboard"),
             },
             {
@@ -34,6 +35,12 @@ const menuItems = [
                 text: "Crm",
                 href: route("superadmin.crm.leads.index"),
                 name: "superadmin.crm.leads.*",
+            },
+            {
+                icon: <FileText size={20} />,
+                text: "Placement Test",
+                href: route("superadmin.placement-tests.index"),
+                name: "superadmin.placement-tests.*",
             },
             // {
             //     icon: <PhoneCall size={20} />,

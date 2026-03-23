@@ -21,6 +21,7 @@ export default function CrmDashboard({
     monthlyTarget = 0,
     monthlyTargets = [],
     branches = [],
+    onKpiClick,
 }) {
     const [selectedBranchId, setSelectedBranchId] = useState("all");
 
@@ -31,6 +32,7 @@ export default function CrmDashboard({
             icon: Users,
             color: "text-blue-600",
             bg: "bg-blue-50",
+            filter: "all",
         },
         {
             label: "New Leads",
@@ -38,6 +40,7 @@ export default function CrmDashboard({
             icon: UserPlus,
             color: "text-green-600",
             bg: "bg-green-50",
+            filter: "New",
         },
         {
             label: "Contacted",
@@ -45,6 +48,7 @@ export default function CrmDashboard({
             icon: PhoneCall,
             color: "text-amber-600",
             bg: "bg-amber-50",
+            filter: "Contacted",
         },
         {
             label: "Enrolled",
@@ -52,6 +56,7 @@ export default function CrmDashboard({
             icon: UserCheck,
             color: "text-emerald-600",
             bg: "bg-emerald-50",
+            filter: "Joined",
         },
         {
             label: "Lost / Dropped",
@@ -59,6 +64,7 @@ export default function CrmDashboard({
             icon: UserX,
             color: "text-red-600",
             bg: "bg-red-50",
+            filter: "Lost",
         },
     ];
 
@@ -227,19 +233,27 @@ export default function CrmDashboard({
                 {kpis.map((kpi, idx) => {
                     const Icon = kpi.icon;
                     return (
-                        <Card key={idx} className="flex items-center gap-4 p-5">
-                            <div className={`p-3 rounded-xl ${kpi.bg}`}>
-                                <Icon className={`w-6 h-6 ${kpi.color}`} />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-500">
-                                    {kpi.label}
-                                </p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {kpi.value}
-                                </p>
-                            </div>
-                        </Card>
+                        <div
+                            key={idx}
+                            onClick={() => onKpiClick && onKpiClick(kpi.filter)}
+                            className="cursor-pointer group focus:outline-none"
+                            role="button"
+                            tabIndex={0}
+                        >
+                            <Card className="flex items-center gap-4 p-5 h-full group-hover:shadow-md transition-all ring-1 ring-transparent group-hover:ring-primary-500/50">
+                                <div className={`p-3 rounded-xl ${kpi.bg}`}>
+                                    <Icon className={`w-6 h-6 ${kpi.color}`} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">
+                                        {kpi.label}
+                                    </p>
+                                    <p className="text-2xl font-bold text-gray-900">
+                                        {kpi.value}
+                                    </p>
+                                </div>
+                            </Card>
+                        </div>
                     );
                 })}
             </div>

@@ -11,6 +11,8 @@ use App\Http\Controllers\Master\MasterLevelController;
 use App\Http\Controllers\Master\MasterPackageController;
 use App\Http\Controllers\Master\LeadStatusController as MasterLeadStatusController;
 use App\Http\Controllers\Master\MonthlyTargetController;
+use App\Http\Controllers\PtExam\PtExamController;
+use App\Models\PtExam;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
 
 // 1. Root Route (Handles initial redirection)
 Route::get('/', [DashboardController::class, 'root'])->name('root');
@@ -56,6 +59,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/crm/leads/{lead}', [LeadController::class, 'destroy'])->name('crm.leads.destroy');
         Route::put('/crm/leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('crm.leads.status.update');
         Route::post('/crm/leads/{lead}/followups', [LeadController::class, 'storeFollowup'])->name('crm.leads.followups.store');
+
+        Route::get('/placement-tests', [PtExamController::class, 'index'])->name('placement-tests.index');
+        Route::get('/placement-tests/create', [PtExamController::class, 'create'])->name('placement-tests.create');
+        Route::post('/placement-tests', [PtExamController::class, 'store'])->name('placement-tests.store');
 
         Route::post('/master/branches', [MasterBranchController::class, 'store'])->name('branches.store');
         Route::put('/master/branches/{branch}', [MasterBranchController::class, 'update'])->name('branches.update');

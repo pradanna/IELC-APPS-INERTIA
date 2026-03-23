@@ -13,6 +13,7 @@ export default function LeadDetailPanel({
     leadStatuses = [],
     onStatusUpdate,
     onFollowupClick,
+    onEditClick,
 }) {
     const [activeTab, setActiveTab] = useState("details");
 
@@ -269,7 +270,12 @@ export default function LeadDetailPanel({
                                             {/* Tab Contents */}
                                             <div className="px-4 py-6 sm:px-6 space-y-6">
                                                 {activeTab === "details" && (
-                                                    <DetailLead lead={lead} />
+                                                    <DetailLead
+                                                        lead={lead}
+                                                        onEditClick={
+                                                            onEditClick
+                                                        }
+                                                    />
                                                 )}
 
                                                 {activeTab === "history" && (

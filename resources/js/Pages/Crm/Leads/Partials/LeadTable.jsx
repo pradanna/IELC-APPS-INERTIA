@@ -15,9 +15,10 @@ export default function LeadTable({
     onFollowupClick,
     onStatusUpdate,
     processingStatusUpdate,
+    statusFilter = "all",
+    setStatusFilter = () => {},
 }) {
     const [searchTerm, setSearchTerm] = useState("");
-    const [statusFilter, setStatusFilter] = useState("all");
     const [sourceFilter, setSourceFilter] = useState("all");
     const [followupFilter, setFollowupFilter] = useState("all");
 

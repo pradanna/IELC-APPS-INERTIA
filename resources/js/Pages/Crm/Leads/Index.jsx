@@ -15,6 +15,7 @@ import {
     Download,
 } from "lucide-react";
 import axios from "axios";
+import { Transition } from "@headlessui/react";
 
 import CrmDashboard from "./Partials/CrmDashboard";
 import LeadTable from "./Partials/LeadTable";
@@ -53,6 +54,7 @@ export default function Index({
     const [leadToDelete, setLeadToDelete] = useState(null);
     const [leadToFollowup, setLeadToFollowup] = useState(null);
     const searchContainerRef = useRef(null);
+    const [statusFilter, setStatusFilter] = useState("all");
 
     const { put, processing } = useForm(); // Untuk status update inline
     const deleteForm = useForm();
@@ -460,36 +462,63 @@ export default function Index({
                 </div>
 
                 {/* Tab Content */}
-                {activeTab === "dashboard" && (
-                    <CrmDashboard
-                        stats={stats}
-                        leads={mappedLeads}
-                        onRowDetailClick={handleShowLeadDetail}
-                        monthlyTarget={monthlyTarget}
-                        monthlyTargets={monthlyTargets}
-                        branches={branches}
-                    />
-                )}
-                {activeTab === "table" && (
-                    <LeadTable
-                        leads={mappedLeads}
-                        leadStatuses={leadStatuses}
-                        onRowDetailClick={handleShowLeadDetail}
-                        onEditClick={handleEditClick}
-                        onDeleteClick={handleDeleteClick}
-                        onFollowupClick={handleFollowupClick}
-                        onStatusUpdate={handleStatusUpdate}
-                        processingStatusUpdate={processing}
-                    />
-                )}
-                {activeTab === "kanban" && (
-                    <LeadKanban
-                        leads={mappedLeads}
-                        onCardClick={handleShowLeadDetail}
-                        onEditClick={handleEditClick}
-                        onDeleteClick={handleDeleteClick}
-                    />
-                )}
+                <Transition
+                    show={activeTab === "dashboard"}
+                    enter="transition ease-out duration-400 transform"
+                    enterFrom="opacity-0 translate-y-4"
+                    enterTo="opacity-100 translate-y-0"
+                >
+                    <div>
+                        <CrmDashboard
+                            stats={stats}
+                            leads={mappedLeads}
+                            onRowDetailClick={handleShowLeadDetail}
+                            monthlyTarget={monthlyTarget}
+                            monthlyTargets={monthlyTargets}
+                            branches={branches}
+                            onKpiClick={(filterVal) => {
+                                setStatusFilter(filterVal);
+                                setActiveTab("table");
+                            }}
+                        />
+                    </div>
+                </Transition>
+                <Transition
+                    show={activeTab === "table"}
+                    enter="transition ease-out duration-400 transform"
+                    enterFrom="opacity-0 translate-y-4"
+                    enterTo="opacity-100 translate-y-0"
+                >
+                    <div>
+                        <LeadTable
+                            leads={mappedLeads}
+                            leadStatuses={leadStatuses}
+                            onRowDetailClick={handleShowLeadDetail}
+                            onEditClick={handleEditClick}
+                            onDeleteClick={handleDeleteClick}
+                            onFollowupClick={handleFollowupClick}
+                            onStatusUpdate={handleStatusUpdate}
+                            processingStatusUpdate={processing}
+                            statusFilter={statusFilter}
+                            setStatusFilter={setStatusFilter}
+                        />
+                    </div>
+                </Transition>
+                <Transition
+                    show={activeTab === "kanban"}
+                    enter="transition ease-out duration-400 transform"
+                    enterFrom="opacity-0 translate-y-4"
+                    enterTo="opacity-100 translate-y-0"
+                >
+                    <div>
+                        <LeadKanban
+                            leads={mappedLeads}
+                            onCardClick={handleShowLeadDetail}
+                            onEditClick={handleEditClick}
+                            onDeleteClick={handleDeleteClick}
+                        />
+                    </div>
+                </Transition>
             </div>
             <LeadDetailPanel
                 lead={selectedLead}
@@ -498,6 +527,7 @@ export default function Index({
                 leadStatuses={leadStatuses}
                 onStatusUpdate={handleStatusUpdate}
                 onFollowupClick={handleFollowupClick}
+                onEditClick={handleEditClick}
             />
 
             {/* Create Lead Modal */}

@@ -8,6 +8,8 @@ import {
     GitBranch,
     StickyNote,
     User,
+    Thermometer,
+    Pencil,
 } from "lucide-react";
 
 const WhatsAppIcon = (props) => (
@@ -33,9 +35,34 @@ const DetailRow = ({ icon: Icon, label, value, action }) => {
     );
 };
 
-export default function DetailLead({ lead }) {
+export default function DetailLead({ lead, onEditClick }) {
+    // Dapatkan notes terbaru: prioritas dari follow-up terakhir yang memiliki notes, jika tidak ada fallback ke notes awal
+    const displayNote = (() => {
+        const followups = lead?.followups || [];
+        if (followups.length > 0) {
+            const sorted = [...followups].sort(
+                (a, b) => new Date(b.created_at) - new Date(a.created_at),
+            );
+            const latestWithNote = sorted.find((f) => f.notes?.trim());
+            if (latestWithNote) return latestWithNote.notes;
+        }
+        return lead?.notes;
+    })();
+
     return (
         <>
+            {/* Edit Action */}
+            <div className="flex justify-end">
+                <button
+                    type="button"
+                    onClick={() => onEditClick && onEditClick(lead?.id)}
+                    className="inline-flex items-center gap-x-1.5 rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                    <Pencil className="-ml-0.5 h-4 w-4 text-gray-400" />
+                    Edit Detail
+                </button>
+            </div>
+
             {/* Details Grid */}
             <div className="space-y-4">
                 <DetailRow
@@ -81,6 +108,16 @@ export default function DetailLead({ lead }) {
             {/* CRM Info */}
             <div className="space-y-4 border-t border-gray-200 pt-5">
                 <DetailRow
+                    icon={Thermometer}
+                    label="Temperature"
+                    value={
+                        lead?.temperature
+                            ? lead.temperature.charAt(0).toUpperCase() +
+                              lead.temperature.slice(1)
+                            : null
+                    }
+                />
+                <DetailRow
                     icon={GitBranch}
                     label="Branch"
                     value={lead?.branch}
@@ -98,14 +135,18 @@ export default function DetailLead({ lead }) {
             </div>
 
             {/* Notes */}
-            {lead?.notes && (
+            {displayNote && (
                 <div className="space-y-2 border-t border-gray-200 pt-5">
                     <div className="flex items-center gap-3">
                         <StickyNote className="h-4 w-4 text-gray-400 shrink-0" />
-                        <p className="text-sm text-gray-500">Notes</p>
+                        <p className="text-sm text-gray-500">
+                            {displayNote !== lead?.notes
+                                ? "Latest Follow-up Notes"
+                                : "Notes"}
+                        </p>
                     </div>
                     <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md border border-gray-200 whitespace-pre-wrap">
-                        {lead?.notes}
+                        {displayNote}
                     </div>
                 </div>
             )}
