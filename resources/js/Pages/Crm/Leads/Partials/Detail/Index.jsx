@@ -26,7 +26,7 @@ export default function LeadDetailPanel({
 
     return (
         <Transition.Root show={open} as={Fragment}>
-            <Dialog as="div" className="relative  z-40" onClose={onClose}>
+            <Dialog as="div" className="relative  z-40" onClose={() => {}}>
                 <Transition.Child
                     as={Fragment}
                     enter="ease-in-out duration-500"
@@ -126,7 +126,7 @@ export default function LeadDetailPanel({
                                                             as="div"
                                                             className="relative inline-block text-left"
                                                         >
-                                                            <div>
+                                                            {/* <div>
                                                                 <Menu.Button className="inline-flex items-center justify-center gap-x-1 rounded-md bg-gray-50 px-2 py-1 text-xs font-semibold text-gray-600 shadow-sm ring-1 ring-inset ring-gray-200 hover:bg-gray-100">
                                                                     <span>
                                                                         Ubah
@@ -134,7 +134,7 @@ export default function LeadDetailPanel({
                                                                     </span>
                                                                     <ChevronDown className="-mr-0.5 h-4 w-4 text-gray-400" />
                                                                 </Menu.Button>
-                                                            </div>
+                                                            </div> */}
 
                                                             <Transition
                                                                 as={Fragment}

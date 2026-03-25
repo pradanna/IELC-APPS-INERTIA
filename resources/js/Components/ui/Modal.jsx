@@ -29,11 +29,14 @@ export default function Modal({
             "2xl": "sm:max-w-2xl",
             "3xl": "sm:max-w-3xl",
             "4xl": "sm:max-w-4xl",
+            "5xl": "sm:max-w-5xl",
+            "6xl": "sm:max-w-6xl",
+            "7xl": "sm:max-w-7xl",
         }[maxWidth] || "sm:max-w-lg";
 
     return (
         <div
-            className="fixed inset-0 z-50 overflow-y-auto"
+            className="fixed inset-0 z-[100] overflow-y-auto"
             aria-labelledby="modal-title"
             role="dialog"
             aria-modal="true"

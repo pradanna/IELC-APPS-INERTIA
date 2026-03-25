@@ -18,7 +18,7 @@ class DashboardController extends Controller
         if (Auth::check()) {
             // User is logged in, redirect to the central dashboard route
             // which will then handle the role-specific redirection.
-            return redirect()->route('dashboard');
+            return redirect()->route('admin.dashboard');
         }
 
         // User is not logged in, redirect to the login page.

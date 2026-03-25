@@ -21,15 +21,15 @@ import CrmDashboard from "./Partials/CrmDashboard";
 import LeadTable from "./Partials/LeadTable";
 import LeadKanban from "./Partials/LeadKanban";
 import LeadDetailPanel from "./Partials/Detail";
-import SuperAdminLayout from "@/Layouts/SuperAdminLayout";
+import AdminLayout from "@/Layouts/AdminLayout";
 import Modal from "@/Components/ui/Modal";
 import InputLabel from "@/Components/ui/InputLabel";
-import TextInput from "@/Components/ui/TextInput";
 import TextArea from "@/Components/ui/TextArea";
 import Select from "react-select";
 import { toTitleCase } from "@/lib/utils";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import TextInput from "@/Components/form/TextInput";
 
 export default function Index({
     auth,
@@ -41,6 +41,7 @@ export default function Index({
     levels = [],
     packages = [],
     leadStatuses = [],
+    ptExams = [],
     monthlyTarget = 0,
     monthlyTargets = [],
 }) {
@@ -55,9 +56,18 @@ export default function Index({
     const [leadToFollowup, setLeadToFollowup] = useState(null);
     const searchContainerRef = useRef(null);
     const [statusFilter, setStatusFilter] = useState("all");
+    const [dynamicPtExams, setDynamicPtExams] = useState(ptExams || []);
 
     const { put, processing } = useForm(); // Untuk status update inline
     const deleteForm = useForm();
+
+    const [isPtModalOpen, setIsPtModalOpen] = useState(false);
+    const [pendingPtUpdate, setPendingPtUpdate] = useState(null);
+    const ptForm = useForm({
+        pt_exam_id: "",
+        scheduled_at: "",
+        interest_package_id: "",
+    });
 
     const createForm = useForm({
         name: "",
@@ -96,6 +106,7 @@ export default function Index({
         scheduled_at: "",
         notes: "",
         lead_status_id: "",
+        pt_exam_id: "",
     });
 
     // Transformasi data untuk memetakan `lead_status_id` menjadi `status` (string)
@@ -115,7 +126,7 @@ export default function Index({
 
     const handleCreateSubmit = (e) => {
         e.preventDefault();
-        createForm.post(route("superadmin.crm.leads.store"), {
+        createForm.post(route("admin.crm.leads.store"), {
             onSuccess: (page) => {
                 createForm.reset();
                 setIsCreateOpen(false);
@@ -131,8 +142,8 @@ export default function Index({
 
     const handleEditSubmit = (e) => {
         e.preventDefault();
-        // Asumsikan route 'superadmin.crm.leads.update' sudah ada
-        editForm.put(route("superadmin.crm.leads.update", leadToEdit.id), {
+        // Asumsikan route 'admin.crm.leads.update' sudah ada
+        editForm.put(route("admin.crm.leads.update", leadToEdit.id), {
             preserveScroll: true,
             onSuccess: () => {
                 setLeadToEdit(null);
@@ -149,27 +160,35 @@ export default function Index({
     };
 
     const handleDeleteSubmit = () => {
-        deleteForm.delete(
-            route("superadmin.crm.leads.destroy", leadToDelete.id),
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setLeadToDelete(null);
-                    if (selectedLead?.id === leadToDelete.id) {
-                        setSelectedLead(null);
-                    }
-                },
+        deleteForm.delete(route("admin.crm.leads.destroy", leadToDelete.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setLeadToDelete(null);
+                if (selectedLead?.id === leadToDelete.id) {
+                    setSelectedLead(null);
+                }
             },
-        );
+        });
     };
 
     const handleFollowupClick = (lead) => {
         followupForm.reset();
+
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 3);
+        defaultDate.setHours(10, 0, 0, 0);
+        const offset = defaultDate.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(defaultDate.getTime() - offset)
+            .toISOString()
+            .slice(0, 16);
+
         followupForm.setData({
             method: "whatsapp",
-            scheduled_at: "",
+            scheduled_at: localISOTime,
             notes: "",
             lead_status_id: lead.lead_status_id || "",
+            pt_exam_id: "",
+            interest_package_id: lead.interest_package_id || "",
         });
         setLeadToFollowup(lead);
     };
@@ -177,7 +196,7 @@ export default function Index({
     const handleFollowupSubmit = (e) => {
         e.preventDefault();
         followupForm.post(
-            route("superadmin.crm.leads.followups.store", leadToFollowup.id),
+            route("admin.crm.leads.followups.store", leadToFollowup.id),
             {
                 preserveScroll: true,
                 onSuccess: () => {
@@ -189,10 +208,27 @@ export default function Index({
     };
 
     const handleStatusUpdate = (leadId, newStatus) => {
+        // Jika status Placement Test (4) dipilih, tahan update & buka modal PT Schedule
+        if (Number(newStatus) === 4) {
+            const leadInfo = mappedLeads.find((l) => l.id === leadId);
+            ptForm.setData({
+                pt_exam_id: "",
+                scheduled_at: "",
+                interest_package_id: leadInfo?.interest_package_id || "",
+            });
+            setPendingPtUpdate({ leadId, newStatus });
+            setIsPtModalOpen(true);
+            return;
+        }
+        executeStatusUpdate(leadId, newStatus);
+    };
+
+    const executeStatusUpdate = (leadId, newStatus, extraData = {}) => {
         router.put(
-            route("superadmin.crm.leads.status.update", { lead: leadId }),
+            route("admin.crm.leads.status.update", { lead: leadId }),
             {
                 lead_status_id: newStatus,
+                ...extraData,
             },
             {
                 preserveScroll: true,
@@ -203,14 +239,56 @@ export default function Index({
                 onError: (errors) => {
                     console.error("Inertia error triggered!", errors);
                 },
+                onFinish: () => {
+                    setIsPtModalOpen(false);
+                    setPendingPtUpdate(null);
+                    ptForm.reset();
+                },
             },
         );
     };
 
+    const handlePtSubmit = (e) => {
+        e.preventDefault();
+        if (pendingPtUpdate) {
+            executeStatusUpdate(
+                pendingPtUpdate.leadId,
+                pendingPtUpdate.newStatus,
+                {
+                    pt_exam_id: ptForm.data.pt_exam_id,
+                    scheduled_at: ptForm.data.scheduled_at,
+                    interest_package_id: ptForm.data.interest_package_id,
+                },
+            );
+        }
+    };
+
+    // Ambil data Active PT Exams dari server jika belum ada saat status Placement Test dipilih
+    useEffect(() => {
+        if (
+            (Number(followupForm.data.lead_status_id) === 4 || isPtModalOpen) &&
+            dynamicPtExams.length === 0
+        ) {
+            // Melakukan request ke endpoint yang telah kita siapkan di controller
+            axios
+                .get(route("admin.placement-tests.active"))
+                .then((response) => {
+                    setDynamicPtExams(response.data);
+                })
+                .catch((error) => {
+                    console.error("Failed to fetch active PT exams", error);
+                });
+        }
+    }, [
+        followupForm.data.lead_status_id,
+        isPtModalOpen,
+        dynamicPtExams.length,
+    ]);
+
     // Debounce untuk filter data utama di tabel & kanban
     const handleSearch = useCallback((query) => {
         router.get(
-            route("superadmin.crm.leads.index"),
+            route("admin.crm.leads.index"),
             { search: query },
             { preserveState: true, preserveScroll: true, replace: true },
         );
@@ -235,9 +313,7 @@ export default function Index({
 
         const delayDebounceFn = setTimeout(() => {
             axios
-                .get(
-                    route("superadmin.crm.leads.search", { query: searchTerm }),
-                )
+                .get(route("admin.crm.leads.search", { query: searchTerm }))
                 .then((response) => {
                     setDropdownResults(response.data);
                     setIsDropdownOpen(response.data.length > 0);
@@ -282,7 +358,7 @@ export default function Index({
         setDropdownResults([]);
         // Ambil data lengkap dari server untuk memastikan data history dan follow-up termuat
         axios
-            .get(route("superadmin.crm.leads.show", { lead: leadId }))
+            .get(route("admin.crm.leads.show", { lead: leadId }))
             .then((response) => {
                 setSelectedLead(response.data.data);
             })
@@ -297,7 +373,7 @@ export default function Index({
 
     const handleEditClick = (leadId) => {
         axios
-            .get(route("superadmin.crm.leads.show", { lead: leadId }))
+            .get(route("admin.crm.leads.show", { lead: leadId }))
             .then((response) => {
                 const leadData = response.data.data;
                 editForm.setData({
@@ -346,7 +422,7 @@ export default function Index({
     };
 
     return (
-        <SuperAdminLayout user={auth.user}>
+        <AdminLayout>
             <Head title="CRM Workspace" />
 
             <div className="px-4 sm:px-6 lg:px-8  mx-auto space-y-6">
@@ -406,7 +482,7 @@ export default function Index({
                         </div>
 
                         <a
-                            href={route("superadmin.crm.leads.export", {
+                            href={route("admin.crm.leads.export", {
                                 search: searchTerm,
                             })}
                             className="inline-flex items-center gap-x-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
@@ -1406,11 +1482,16 @@ export default function Index({
                                 }
                                 className="block w-full rounded-lg border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                             >
-                                {leadStatuses.map((status) => (
-                                    <option key={status.id} value={status.id}>
-                                        {status.name}
-                                    </option>
-                                ))}
+                                {leadStatuses
+                                    .filter((status) => status.id !== 6)
+                                    .map((status) => (
+                                        <option
+                                            key={status.id}
+                                            value={status.id}
+                                        >
+                                            {status.name}
+                                        </option>
+                                    ))}
                             </select>
                         </div>
                     </div>
@@ -1439,26 +1520,139 @@ export default function Index({
                         </div>
                     </div>
 
-                    <div>
-                        <InputLabel
-                            htmlFor="scheduled_at"
-                            value="Next Schedule"
-                        />
-                        <div className="mt-1">
-                            <TextInput
-                                id="scheduled_at"
-                                type="datetime-local"
-                                value={followupForm.data.scheduled_at}
-                                onChange={(e) =>
-                                    followupForm.setData(
-                                        "scheduled_at",
-                                        e.target.value,
-                                    )
-                                }
-                                className="w-full"
+                    {Number(followupForm.data.lead_status_id) !== 5 &&
+                        Number(followupForm.data.lead_status_id) !== 6 &&
+                        Number(followupForm.data.lead_status_id) !== 4 && (
+                            <div>
+                                <InputLabel
+                                    htmlFor="scheduled_at"
+                                    value="Next Schedule"
+                                />
+                                <div className="mt-1">
+                                    <TextInput
+                                        id="scheduled_at"
+                                        type="datetime-local"
+                                        value={followupForm.data.scheduled_at}
+                                        onChange={(e) =>
+                                            followupForm.setData(
+                                                "scheduled_at",
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="w-full"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                    {(Number(followupForm.data.lead_status_id) === 5 ||
+                        Number(followupForm.data.lead_status_id) === 4) && (
+                        <div>
+                            <InputLabel
+                                htmlFor="followup_interest_package_id"
+                                value="Paket yang Diminati"
                             />
+                            <div className="mt-1">
+                                <Select
+                                    id="followup_interest_package_id"
+                                    styles={reactSelectStyles}
+                                    menuPosition="fixed"
+                                    options={packages.map((p) => ({
+                                        value: p.id,
+                                        label: p.name,
+                                    }))}
+                                    value={
+                                        packages
+                                            .map((p) => ({
+                                                value: p.id,
+                                                label: p.name,
+                                            }))
+                                            .find(
+                                                (opt) =>
+                                                    opt.value ===
+                                                    followupForm.data
+                                                        .interest_package_id,
+                                            ) || null
+                                    }
+                                    onChange={(opt) =>
+                                        followupForm.setData(
+                                            "interest_package_id",
+                                            opt ? opt.value : "",
+                                        )
+                                    }
+                                    placeholder="-- Pilih Paket Pendaftaran --"
+                                    isClearable
+                                    className="w-full"
+                                />
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {Number(followupForm.data.lead_status_id) === 4 && (
+                        <>
+                            <div>
+                                <InputLabel
+                                    htmlFor="pt_exam_id"
+                                    value="Pilih Paket Ujian"
+                                />
+                                <div className="mt-1">
+                                    <Select
+                                        id="pt_exam_id"
+                                        styles={reactSelectStyles}
+                                        menuPosition="fixed"
+                                        options={dynamicPtExams.map((exam) => ({
+                                            value: exam.id,
+                                            label: exam.title || exam.name,
+                                        }))}
+                                        value={
+                                            dynamicPtExams
+                                                .map((exam) => ({
+                                                    value: exam.id,
+                                                    label:
+                                                        exam.title || exam.name,
+                                                }))
+                                                .find(
+                                                    (opt) =>
+                                                        opt.value ===
+                                                        followupForm.data
+                                                            .pt_exam_id,
+                                                ) || null
+                                        }
+                                        onChange={(opt) =>
+                                            followupForm.setData(
+                                                "pt_exam_id",
+                                                opt ? opt.value : "",
+                                            )
+                                        }
+                                        placeholder="-- Pilih Paket --"
+                                        isClearable
+                                        className="w-full"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <InputLabel
+                                    htmlFor="scheduled_at"
+                                    value="PT Schedule"
+                                />
+                                <div className="mt-1">
+                                    <TextInput
+                                        id="scheduled_at"
+                                        type="datetime-local"
+                                        value={followupForm.data.scheduled_at}
+                                        onChange={(e) =>
+                                            followupForm.setData(
+                                                "scheduled_at",
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="w-full"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     <div>
                         <InputLabel htmlFor="followup_notes" value="Notes" />
@@ -1516,6 +1710,144 @@ export default function Index({
                     </div>
                 </form>
             </Modal>
-        </SuperAdminLayout>
+
+            {/* Jadwalkan Placement Test Modal */}
+            <Modal
+                show={isPtModalOpen}
+                onClose={() => setIsPtModalOpen(false)}
+                title="Jadwalkan Placement Test"
+            >
+                <form onSubmit={handlePtSubmit} className="space-y-4">
+                    <div>
+                        <InputLabel
+                            htmlFor="pt_exam_id"
+                            value="Pilih Paket Ujian"
+                        />
+                        <div className="mt-1">
+                            <Select
+                                id="pt_exam_id"
+                                styles={reactSelectStyles}
+                                menuPosition="fixed"
+                                options={dynamicPtExams.map((exam) => ({
+                                    value: exam.id,
+                                    label: exam.title || exam.name,
+                                }))}
+                                value={
+                                    dynamicPtExams
+                                        .map((exam) => ({
+                                            value: exam.id,
+                                            label: exam.title || exam.name,
+                                        }))
+                                        .find(
+                                            (opt) =>
+                                                opt.value ===
+                                                ptForm.data.pt_exam_id,
+                                        ) || null
+                                }
+                                onChange={(opt) =>
+                                    ptForm.setData(
+                                        "pt_exam_id",
+                                        opt ? opt.value : "",
+                                    )
+                                }
+                                placeholder="-- Pilih Paket --"
+                                isClearable
+                                className="w-full"
+                            />
+                            {ptForm.errors.pt_exam_id && (
+                                <p className="mt-1 text-xs text-red-600">
+                                    {ptForm.errors.pt_exam_id}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel
+                            htmlFor="pt_interest_package_id"
+                            value="Paket yang Diminati"
+                        />
+                        <div className="mt-1">
+                            <Select
+                                id="pt_interest_package_id"
+                                styles={reactSelectStyles}
+                                menuPosition="fixed"
+                                options={packages.map((p) => ({
+                                    value: p.id,
+                                    label: p.name,
+                                }))}
+                                value={
+                                    packages
+                                        .map((p) => ({
+                                            value: p.id,
+                                            label: p.name,
+                                        }))
+                                        .find(
+                                            (opt) =>
+                                                opt.value ===
+                                                ptForm.data.interest_package_id,
+                                        ) || null
+                                }
+                                onChange={(opt) =>
+                                    ptForm.setData(
+                                        "interest_package_id",
+                                        opt ? opt.value : "",
+                                    )
+                                }
+                                placeholder="-- Pilih Paket Pendaftaran --"
+                                isClearable
+                                className="w-full"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel
+                            htmlFor="pt_scheduled_at"
+                            value="Jadwal Pelaksanaan"
+                        />
+                        <div className="mt-1">
+                            <TextInput
+                                id="pt_scheduled_at"
+                                type="datetime-local"
+                                value={ptForm.data.scheduled_at}
+                                onChange={(e) =>
+                                    ptForm.setData(
+                                        "scheduled_at",
+                                        e.target.value,
+                                    )
+                                }
+                                className="w-full"
+                                required
+                            />
+                            {ptForm.errors.scheduled_at && (
+                                <p className="mt-1 text-xs text-red-600">
+                                    {ptForm.errors.scheduled_at}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        <button
+                            type="submit"
+                            disabled={ptForm.processing}
+                            className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50"
+                        >
+                            {ptForm.processing
+                                ? "Menyimpan..."
+                                : "Jadwalkan & Ubah Status"}
+                        </button>
+                        <button
+                            type="button"
+                            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                            onClick={() => setIsPtModalOpen(false)}
+                        >
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+        </AdminLayout>
     );
 }

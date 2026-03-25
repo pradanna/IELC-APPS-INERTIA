@@ -5,7 +5,7 @@ import Modal from "@/Components/ui/Modal";
 import Panel from "@/Components/ui/Panel";
 import TableIconButton from "@/Components/ui/TableIconButton";
 import TextArea from "@/Components/ui/TextArea";
-import TextInput from "@/Components/ui/TextInput";
+import TextInput from "@/Components/form/TextInput";
 import { useForm } from "@inertiajs/react";
 import React, { useState } from "react";
 import SearchInput from "@/Components/ui/SearchInput";
@@ -31,7 +31,7 @@ export default function BranchesTable({ branches }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("superadmin.branches.store"), {
+        post(route("admin.branches.store"), {
             onSuccess: () => {
                 reset();
                 setIsOpen(false);
@@ -40,13 +40,10 @@ export default function BranchesTable({ branches }) {
     };
 
     const handleDeleteBranch = () => {
-        deleteForm.delete(
-            route("superadmin.branches.destroy", branchToDelete.id),
-            {
-                preserveScroll: true,
-                onSuccess: () => setBranchToDelete(null),
-            },
-        );
+        deleteForm.delete(route("admin.branches.destroy", branchToDelete.id), {
+            preserveScroll: true,
+            onSuccess: () => setBranchToDelete(null),
+        });
     };
 
     const handleEditClick = (branch) => {
@@ -60,7 +57,7 @@ export default function BranchesTable({ branches }) {
 
     const handleEditSubmit = (e) => {
         e.preventDefault();
-        editForm.put(route("superadmin.branches.update", branchToEdit.id), {
+        editForm.put(route("admin.branches.update", branchToEdit.id), {
             onSuccess: () => {
                 setBranchToEdit(null);
                 editForm.reset();

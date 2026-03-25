@@ -5,11 +5,13 @@ namespace App\Http\Controllers\PtExam;
 use App\Actions\PtExam\CreatePtExamAction;
 use App\Actions\PtExam\DeletePtExamAction;
 use App\Actions\PtExam\UpdatePtExamAction;
+use App\Actions\PtExam\GetActivePtExamsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PtExam\StorePtExamRequest;
 use App\Http\Requests\PtExam\UpdatePtExamRequest;
 use App\Http\Resources\PtExam\PtExamResource;
 use App\Models\PtExam;
+use App\Models\LeadStatus;
 use App\Models\PtSession;
 use Carbon\Carbon;
 use Inertia\Inertia;
@@ -31,13 +33,16 @@ class PtExamController extends Controller
         $tests = PtSession::with(['lead', 'ptExam'])->latest()->take(50)->get()->map(function ($session) {
             return [
                 'id' => $session->id,
+                'lead_id' => $session->lead_id,
                 'lead_name' => $session->lead->name ?? 'Unknown',
                 'wa' => $session->lead->phone ?? '-',
                 'package_name' => $session->ptExam->title ?? 'Unknown',
+                'package_slug' => $session->ptExam->slug ?? '',
                 'scheduled_at' => $session->created_at->format('d M Y, H:i \W\I\B'),
                 'status' => $session->status,
                 'score' => $session->final_score,
                 'recommended_level' => $session->recommended_level,
+                'token' => $session->token,
             ];
         });
 
@@ -51,27 +56,35 @@ class PtExamController extends Controller
             ];
         });
 
+        $leadStatuses = LeadStatus::all();
+
         return Inertia::render('PlacementTests/Index', [
             'stats' => $stats,
             'tests' => $tests,
             'examPackages' => $examPackages,
+            'leadStatuses' => $leadStatuses,
         ]);
-    }
-
-    public function create()
-    {
-        return Inertia::render('PlacementTests/Create');
     }
 
     public function store(StorePtExamRequest $request, CreatePtExamAction $action)
     {
         $action->execute($request->validated());
 
-        return redirect()->route('superadmin.placement-tests.index')->with('success', 'Paket ujian berhasil dibuat.');
+        return redirect()->route('admin.placement-tests.index')->with('success', 'Paket ujian berhasil dibuat.');
     }
 
     public function show(PtExam $ptExam)
     {
+        $ptExam->loadCount('questions');
+
+        // Memuat soal mandiri (tanpa grup) dan grup beserta soal-soalnya
+        $ptExam->load([
+            'questions' => function ($query) {
+                $query->whereNull('pt_question_group_id')->with('options');
+            },
+            'ptQuestionGroups.questions.options'
+        ]);
+
         return Inertia::render('PlacementTests/Show', [
             'exam' => new PtExamResource($ptExam)
         ]);
@@ -88,13 +101,23 @@ class PtExamController extends Controller
     {
         $action->execute($ptExam, $request->validated());
 
-        return redirect()->route('superadmin.placement-tests.index')->with('success', 'Paket ujian berhasil diperbarui.');
+        return back()->with('success', 'Paket ujian berhasil diperbarui.');
     }
 
     public function destroy(PtExam $ptExam, DeletePtExamAction $action)
     {
         $action->execute($ptExam);
 
-        return redirect()->route('superadmin.placement-tests.index')->with('success', 'Paket ujian berhasil dihapus.');
+        return redirect()->route('admin.placement-tests.index')->with('success', 'Paket ujian berhasil dihapus.');
+    }
+
+    /**
+     * Mengambil daftar paket ujian aktif (untuk dropdown Modal di frontend).
+     */
+    public function getActiveExams(GetActivePtExamsAction $action)
+    {
+        $exams = $action->execute();
+
+        return response()->json($exams);
     }
 }

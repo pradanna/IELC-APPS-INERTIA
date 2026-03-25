@@ -2,66 +2,80 @@
 
 namespace App\Http\Controllers\PtExam;
 
-use App\Actions\PtExam\PtQuestion\CreatePtQuestionAction;
-use App\Actions\PtQuestion\DeletePtQuestionAction;
-use App\Actions\PtQuestion\UpdatePtQuestionAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PtExam\PtQuestion\StorePtQuestionRequest;
 use App\Http\Requests\PtExam\PtQuestion\UpdatePtQuestionRequest;
-use App\Http\Resources\PtExam\PtExamResource;
-use App\Http\Resources\PtQuestion\PtQuestionResource;
+use App\Actions\PtExam\PtQuestion\DeletePtQuestionAction;
+use App\Actions\PtExam\PtQuestion\UpdatePtQuestionAction;
 use App\Models\PtExam;
 use App\Models\PtQuestion;
-use Inertia\Inertia;
+use App\Exports\PtQuestionsTemplateExport;
+use App\Imports\PtQuestionsImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PtQuestionController extends Controller
 {
-    public function index()
+    public function store(StorePtQuestionRequest $request, PtExam $ptExam)
     {
-        $questions = PtQuestion::with('ptExam')->latest()->get();
+        $validated = $request->validated();
 
-        return Inertia::render('PtQuestions/Index', [
-            'questions' => PtQuestionResource::collection($questions)
+        // Handle unggahan file media jika ada
+        $mediaPath = null;
+        if ($request->hasFile('media')) {
+            $file = $request->file('media');
+            $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/pt-questions-media'), $filename);
+            $mediaPath = 'uploads/pt-questions-media/' . $filename;
+        }
+
+        // Simpan data soal utama
+        $question = $ptExam->questions()->create([
+            'pt_question_group_id' => $validated['pt_question_group_id'] ?? null,
+            'question_text' => $validated['question_text'],
+            'points' => $validated['points'],
+            'audio_path' => $mediaPath,
         ]);
+
+        // Asumsi jika menggunakan tabel relasi terpisah untuk opsi (HasMany `options`)
+        foreach ($validated['options'] as $index => $optionText) {
+            $question->options()->create([
+                'option_text' => $optionText,
+                'is_correct' => ($index == $validated['correct_answer']),
+            ]);
+        }
+
+        return back()->with('success', 'Soal berhasil ditambahkan.');
     }
 
-    public function create()
+    public function import(Request $request, PtExam $ptExam)
     {
-        $exams = PtExam::where('is_active', true)->get();
-
-        return Inertia::render('PtQuestions/Create', [
-            'exams' => PtExamResource::collection($exams)
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:5120',
         ]);
+
+        Excel::import(new PtQuestionsImport($ptExam), $request->file('file'));
+
+        return back()->with('success', 'Soal berhasil diimpor dari Excel.');
     }
 
-    public function store(StorePtQuestionRequest $request, CreatePtQuestionAction $action)
+    public function downloadTemplate()
     {
-        $action->execute($request->validated());
-
-        return redirect()->route('pt-questions.index')->with('success', 'Question created successfully.');
+        return Excel::download(new PtQuestionsTemplateExport, 'Template_Import_Soal.xlsx');
     }
 
-    public function edit(PtQuestion $ptQuestion)
+    public function update(UpdatePtQuestionRequest $request, PtExam $ptExam, PtQuestion $question, UpdatePtQuestionAction $action)
     {
-        $exams = PtExam::where('is_active', true)->get();
+        $action->execute($question, $request->validated(), $request->file('media'));
 
-        return Inertia::render('PtQuestions/Edit', [
-            'question' => new PtQuestionResource($ptQuestion),
-            'exams' => PtExamResource::collection($exams)
-        ]);
+        return back()->with('success', 'Soal berhasil diperbarui.');
     }
 
-    public function update(UpdatePtQuestionRequest $request, PtQuestion $ptQuestion, UpdatePtQuestionAction $action)
+    public function destroy(PtExam $ptExam, PtQuestion $question, DeletePtQuestionAction $action)
     {
-        $action->execute($ptQuestion, $request->validated());
+        $action->execute($question);
 
-        return redirect()->route('pt-questions.index')->with('success', 'Question updated successfully.');
-    }
-
-    public function destroy(PtQuestion $ptQuestion, DeletePtQuestionAction $action)
-    {
-        $action->execute($ptQuestion);
-
-        return redirect()->route('pt-questions.index')->with('success', 'Question deleted successfully.');
+        return back()->with('success', 'Soal berhasil dihapus.');
     }
 }

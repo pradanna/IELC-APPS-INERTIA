@@ -8,7 +8,7 @@ use App\Actions\PtExam\PtQuestionOption\UpdatePtQuestionOptionAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PtExam\PtQuestionOption\UpdatePtQuestionOptionRequest;
 use App\Http\Requests\PtQuestionOption\StorePtQuestionOptionRequest;
-use App\Http\Resources\PtQuestion\PtQuestionResource;
+use App\Http\Resources\PtExam\PtQuestion\PtQuestionResource;
 use App\Http\Resources\PtQuestionOption\PtQuestionOptionResource;
 use App\Models\PtQuestion;
 use App\Models\PtQuestionOption;

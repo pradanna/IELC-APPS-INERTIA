@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\PtQuestionOption;
 
-use App\Http\Resources\PtQuestion\PtQuestionResource;
+use App\Http\Resources\PtExam\PtQuestion\PtQuestionResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

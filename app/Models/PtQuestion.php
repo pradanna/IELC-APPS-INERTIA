@@ -13,6 +13,7 @@ class PtQuestion extends Model
 
     protected $fillable = [
         'pt_exam_id',
+        'pt_question_group_id',
         'question_text',
         'audio_path',
         'points',
@@ -25,6 +26,11 @@ class PtQuestion extends Model
     public function ptExam(): BelongsTo
     {
         return $this->belongsTo(PtExam::class);
+    }
+
+    public function ptQuestionGroup(): BelongsTo
+    {
+        return $this->belongsTo(PtQuestionGroup::class);
     }
 
     public function options(): HasMany

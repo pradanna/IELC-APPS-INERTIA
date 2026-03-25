@@ -1,10 +1,10 @@
 import React from 'react';
-import SuperAdminLayout from '@/Layouts/SuperAdminLayout';
+import AdminLayout from '@/Layouts/AdminLayout';
 import { Head } from '@inertiajs/react';
 
 export default function Dashboard(props) {
     return (
-        <SuperAdminLayout>
+        <AdminLayout>
             <Head title="Dashboard" />
 
             <div className="py-12">
@@ -18,6 +18,6 @@ export default function Dashboard(props) {
                     </div>
                 </div>
             </div>
-        </SuperAdminLayout>
+        </AdminLayout>
     );
 }

@@ -5,7 +5,7 @@ import Modal from "@/Components/ui/Modal";
 import Panel from "@/Components/ui/Panel";
 import TableIconButton from "@/Components/ui/TableIconButton";
 import Select from "@/Components/ui/Select";
-import TextInput from "@/Components/ui/TextInput";
+import TextInput from "@/Components/form/TextInput";
 import { useForm } from "@inertiajs/react";
 import React, { useState } from "react";
 import SearchInput from "@/Components/ui/SearchInput";
@@ -50,7 +50,7 @@ export default function MonthlyTargetTable({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("superadmin.monthly-targets.store"), {
+        post(route("admin.monthly-targets.store"), {
             onSuccess: () => {
                 reset();
                 setIsOpen(false);
@@ -60,7 +60,7 @@ export default function MonthlyTargetTable({
 
     const handleDeleteTarget = () => {
         deleteForm.delete(
-            route("superadmin.monthly-targets.destroy", targetToDelete.id),
+            route("admin.monthly-targets.destroy", targetToDelete.id),
             {
                 preserveScroll: true,
                 onSuccess: () => setTargetToDelete(null),
@@ -80,15 +80,12 @@ export default function MonthlyTargetTable({
 
     const handleEditSubmit = (e) => {
         e.preventDefault();
-        editForm.put(
-            route("superadmin.monthly-targets.update", targetToEdit.id),
-            {
-                onSuccess: () => {
-                    setTargetToEdit(null);
-                    editForm.reset();
-                },
+        editForm.put(route("admin.monthly-targets.update", targetToEdit.id), {
+            onSuccess: () => {
+                setTargetToEdit(null);
+                editForm.reset();
             },
-        );
+        });
     };
 
     const columns = [

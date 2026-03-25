@@ -47,6 +47,14 @@ class LeadStatusSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'name' => 'Waiting for Payment',
+                'description' => 'Siswa telah setuju dengan hasil Placement Test dan sedang dalam proses pembayaran/invoice.',
+                'text_color' => '#b45309',
+                'bg_color' => '#fef3c7',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'name' => 'Joined',
                 'description' => 'Berhasil bergabung menjadi siswa.',
                 'text_color' => '#FFFFFF',

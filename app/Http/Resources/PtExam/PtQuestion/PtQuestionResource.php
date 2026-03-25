@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\PtQuestion;
+namespace App\Http\Resources\PtExam\PtQuestion;
 
 use App\Http\Resources\PtExam\PtExamResource;
 use Illuminate\Http\Request;
@@ -18,6 +18,7 @@ class PtQuestionResource extends JsonResource
             'points' => $this->points,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'options' => $this->whenLoaded('options'),
             // Load relasi jika dipanggil melalui "with('ptExam')"
             'exam' => new PtExamResource($this->whenLoaded('ptExam')),
         ];

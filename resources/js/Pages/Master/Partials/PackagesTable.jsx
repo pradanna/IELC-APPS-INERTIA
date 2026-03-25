@@ -5,7 +5,7 @@ import Modal from "@/Components/ui/Modal";
 import Panel from "@/Components/ui/Panel";
 import TableIconButton from "@/Components/ui/TableIconButton";
 import Select from "@/Components/ui/Select";
-import TextInput from "@/Components/ui/TextInput";
+import TextInput from "@/Components/form/TextInput";
 import { useForm } from "@inertiajs/react";
 import React, { useState } from "react";
 import SearchInput from "@/Components/ui/SearchInput";
@@ -35,7 +35,7 @@ export default function PackagesTable({ packages, levels = [] }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("superadmin.packages.store"), {
+        post(route("admin.packages.store"), {
             onSuccess: () => {
                 reset();
                 setIsOpen(false);
@@ -44,13 +44,10 @@ export default function PackagesTable({ packages, levels = [] }) {
     };
 
     const handleDeletePackage = () => {
-        deleteForm.delete(
-            route("superadmin.packages.destroy", packageToDelete.id),
-            {
-                preserveScroll: true,
-                onSuccess: () => setPackageToDelete(null),
-            },
-        );
+        deleteForm.delete(route("admin.packages.destroy", packageToDelete.id), {
+            preserveScroll: true,
+            onSuccess: () => setPackageToDelete(null),
+        });
     };
 
     const handleEditClick = (pkg) => {
@@ -66,7 +63,7 @@ export default function PackagesTable({ packages, levels = [] }) {
 
     const handleEditSubmit = (e) => {
         e.preventDefault();
-        editForm.put(route("superadmin.packages.update", packageToEdit.id), {
+        editForm.put(route("admin.packages.update", packageToEdit.id), {
             onSuccess: () => {
                 setPackageToEdit(null);
                 editForm.reset();

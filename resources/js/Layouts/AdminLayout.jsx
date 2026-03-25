@@ -13,6 +13,7 @@ import {
     Headset,
     PhoneCall,
     FileText,
+    CircleDollarSign,
 } from "lucide-react";
 import Navbar from "@/Components/shared/Navbar";
 import Toast from "@/Components/ui/Toast";
@@ -27,20 +28,20 @@ const menuItems = [
             {
                 icon: <LayoutDashboard size={20} />,
                 text: "Dashboard",
-                name: "superadmin.dashboard",
-                href: route("dashboard"),
+                name: "admin.dashboard",
+                href: route("admin.dashboard"),
             },
             {
                 icon: <Headset size={20} />,
                 text: "Crm",
-                href: route("superadmin.crm.leads.index"),
-                name: "superadmin.crm.leads.*",
+                href: route("admin.crm.leads.index"),
+                name: "admin.crm.leads.*",
             },
             {
                 icon: <FileText size={20} />,
                 text: "Placement Test",
-                href: route("superadmin.placement-tests.index"),
-                name: "superadmin.placement-tests.*",
+                href: route("admin.placement-tests.index"),
+                name: "admin.placement-tests.*",
             },
             // {
             //     icon: <PhoneCall size={20} />,
@@ -51,13 +52,24 @@ const menuItems = [
         ],
     },
     {
+        category: "Finance",
+        items: [
+            {
+                icon: <CircleDollarSign size={20} />,
+                text: "Overview",
+                href: route("admin.finance.dashboard"),
+                name: "admin.finance.dashboard",
+            },
+        ],
+    },
+    {
         category: "Management",
         items: [
             {
                 icon: <BookCopy size={20} />,
                 text: "Master",
-                href: route("superadmin.master.index"),
-                name: "superadmin.master.index",
+                href: route("admin.master.index"),
+                name: "admin.master.index",
             },
         ],
     },
@@ -93,7 +105,7 @@ const menuItems = [
 
 const SidebarContext = React.createContext();
 
-export default function SuperAdminLayout({ children }) {
+export default function AdminLayout({ children }) {
     const [expanded, setExpanded] = React.useState(true);
     const { auth } = usePage().props;
 

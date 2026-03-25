@@ -6,7 +6,7 @@ import Panel from "@/Components/ui/Panel";
 import TableIconButton from "@/Components/ui/TableIconButton";
 import Modal from "@/Components/ui/Modal";
 import InputLabel from "@/Components/ui/InputLabel";
-import TextInput from "@/Components/ui/TextInput";
+import TextInput from "@/Components/form/TextInput";
 import TextArea from "@/Components/ui/TextArea";
 import { useForm } from "@inertiajs/react";
 import SearchInput from "@/Components/ui/SearchInput";
@@ -35,7 +35,7 @@ export default function LeadStatusesTable({ leadStatuses }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("superadmin.master.lead-statuses.store"), {
+        post(route("admin.master.lead-statuses.store"), {
             onSuccess: () => {
                 reset();
                 setIsOpen(false);
@@ -45,7 +45,7 @@ export default function LeadStatusesTable({ leadStatuses }) {
 
     const handleDeleteStatus = () => {
         deleteForm.delete(
-            route("superadmin.master.lead-statuses.destroy", statusToDelete.id),
+            route("admin.master.lead-statuses.destroy", statusToDelete.id),
             {
                 preserveScroll: true,
                 onSuccess: () => setStatusToDelete(null),
@@ -66,7 +66,7 @@ export default function LeadStatusesTable({ leadStatuses }) {
     const handleEditSubmit = (e) => {
         e.preventDefault();
         editForm.put(
-            route("superadmin.master.lead-statuses.update", statusToEdit.id),
+            route("admin.master.lead-statuses.update", statusToEdit.id),
             {
                 onSuccess: () => {
                     setStatusToEdit(null);

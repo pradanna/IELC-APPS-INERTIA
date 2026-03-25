@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Pencil, Trash2, PhoneCall } from "lucide-react";
+import { Eye, Pencil, Trash2, PhoneCall, CreditCard } from "lucide-react";
 
 const TableIconButton = ({ type, onClick }) => {
     // Konfigurasi dinamis berdasarkan tipe tombol
@@ -27,6 +27,12 @@ const TableIconButton = ({ type, onClick }) => {
             tooltip: "Follow-up",
             // Background hijau soft (100), text hijau (600)
             style: "text-green-600 bg-green-100 hover:bg-green-200",
+        },
+        payment: {
+            icon: CreditCard,
+            tooltip: "Proses Siswa ke Pembayaran",
+            // Background ungu soft (100), text ungu (600)
+            style: "text-purple-600 bg-purple-100 hover:bg-purple-200",
         },
     };
 

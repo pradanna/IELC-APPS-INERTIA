@@ -61,14 +61,6 @@ class UserRoleSeeder extends Seeder
                 ]));
             });
             $branch->teachers()->attach($teachers->pluck('id'));
-
-            // Create Students for this branch
-            User::factory()->count(10)->create(['role' => 'student'])->each(function ($user) use ($branch) {
-                $user->student()->save(Student::factory()->make([
-                    'branch_id' => $branch->id,
-                    'name' => $user->name, // Ensure the name is consistent
-                ]));
-            });
         });
     }
 }

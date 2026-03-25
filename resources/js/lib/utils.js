@@ -32,3 +32,10 @@ export function toTitleCase(str) {
         (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
     );
 }
+
+export const formatRp = (val) =>
+    new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+    }).format(val || 0);

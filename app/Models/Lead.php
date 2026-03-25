@@ -117,4 +117,9 @@ class Lead extends Model
     {
         return $this->hasMany(PtSession::class);
     }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
 }

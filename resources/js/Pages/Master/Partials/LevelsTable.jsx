@@ -5,7 +5,7 @@ import Modal from "@/Components/ui/Modal";
 import Panel from "@/Components/ui/Panel";
 import TableIconButton from "@/Components/ui/TableIconButton";
 import TextArea from "@/Components/ui/TextArea";
-import TextInput from "@/Components/ui/TextInput";
+import TextInput from "@/Components/form/TextInput";
 import { useForm } from "@inertiajs/react";
 import React, { useState } from "react";
 import SearchInput from "@/Components/ui/SearchInput";
@@ -29,7 +29,7 @@ export default function LevelsTable({ levels }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("superadmin.levels.store"), {
+        post(route("admin.levels.store"), {
             onSuccess: () => {
                 reset();
                 setIsOpen(false);
@@ -38,13 +38,10 @@ export default function LevelsTable({ levels }) {
     };
 
     const handleDeleteLevel = () => {
-        deleteForm.delete(
-            route("superadmin.levels.destroy", levelToDelete.id),
-            {
-                preserveScroll: true,
-                onSuccess: () => setLevelToDelete(null),
-            },
-        );
+        deleteForm.delete(route("admin.levels.destroy", levelToDelete.id), {
+            preserveScroll: true,
+            onSuccess: () => setLevelToDelete(null),
+        });
     };
 
     const handleEditClick = (level) => {
@@ -57,7 +54,7 @@ export default function LevelsTable({ levels }) {
 
     const handleEditSubmit = (e) => {
         e.preventDefault();
-        editForm.put(route("superadmin.levels.update", levelToEdit.id), {
+        editForm.put(route("admin.levels.update", levelToEdit.id), {
             onSuccess: () => {
                 setLevelToEdit(null);
                 editForm.reset();

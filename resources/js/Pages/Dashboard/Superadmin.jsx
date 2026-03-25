@@ -1,5 +1,5 @@
 import React from "react";
-import SuperAdminLayout from "@/Layouts/SuperAdminLayout";
+import AdminLayout from "@/Layouts/AdminLayout";
 import ExecutiveKpiCards from "./Partials/ExecutiveKpiCards";
 import BranchPerformance from "./Partials/BranchPerformance";
 import CrmPipeline from "./Partials/CrmPipeline";
@@ -7,7 +7,7 @@ import TopPackages from "./Partials/TopPackages";
 
 export default function Superadmin({ auth, stats }) {
     return (
-        <SuperAdminLayout user={auth.user}>
+        <AdminLayout>
             <div className="space-y-6">
                 <h1 className="text-2xl font-bold text-gray-800">
                     Superadmin Dashboard
@@ -25,6 +25,6 @@ export default function Superadmin({ auth, stats }) {
                 {/* Row 4: Top Packages */}
                 <TopPackages />
             </div>
-        </SuperAdminLayout>
+        </AdminLayout>
     );
 }

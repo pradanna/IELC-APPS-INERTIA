@@ -1,5 +1,5 @@
 import React from "react";
-import SuperAdminLayout from "@/Layouts/SuperAdminLayout";
+import AdminLayout from "@/Layouts/AdminLayout";
 import { Head } from "@inertiajs/react";
 
 import Tabs from "./Partials/Tabs";
@@ -60,7 +60,7 @@ export default function Index({
     ];
 
     return (
-        <SuperAdminLayout user={auth.user}>
+        <AdminLayout>
             <Head title="Master Data" />
             <div className="px-4 sm:px-6 lg:px-8  pb-0">
                 <h1 className="text-xl font-bold leading-7 text-gray-900 mb-3">
@@ -73,6 +73,6 @@ export default function Index({
 
                 <Tabs tabs={tabs} initialTab="branches" />
             </div>
-        </SuperAdminLayout>
+        </AdminLayout>
     );
 }

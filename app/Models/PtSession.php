@@ -16,6 +16,7 @@ class PtSession extends Model
         'pt_exam_id',
         'token',
         'status',
+        'scheduled_at',
         'started_at',
         'finished_at',
         'final_score',

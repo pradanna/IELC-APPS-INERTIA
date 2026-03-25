@@ -4,7 +4,7 @@ import InputLabel from "@/Components/ui/InputLabel";
 import Modal from "@/Components/ui/Modal";
 import Panel from "@/Components/ui/Panel";
 import TableIconButton from "@/Components/ui/TableIconButton";
-import TextInput from "@/Components/ui/TextInput";
+import TextInput from "@/Components/form/TextInput";
 import { useForm } from "@inertiajs/react";
 import React, { useState } from "react";
 import SearchInput from "@/Components/ui/SearchInput";
@@ -26,7 +26,7 @@ export default function LeadSourcesTable({ leadSources }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("superadmin.lead-sources.store"), {
+        post(route("admin.lead-sources.store"), {
             onSuccess: () => {
                 reset();
                 setIsOpen(false);
@@ -36,7 +36,7 @@ export default function LeadSourcesTable({ leadSources }) {
 
     const handleDeleteSource = () => {
         deleteForm.delete(
-            route("superadmin.lead-sources.destroy", sourceToDelete.id),
+            route("admin.lead-sources.destroy", sourceToDelete.id),
             {
                 preserveScroll: true,
                 onSuccess: () => setSourceToDelete(null),
@@ -53,7 +53,7 @@ export default function LeadSourcesTable({ leadSources }) {
 
     const handleEditSubmit = (e) => {
         e.preventDefault();
-        editForm.put(route("superadmin.lead-sources.update", sourceToEdit.id), {
+        editForm.put(route("admin.lead-sources.update", sourceToEdit.id), {
             onSuccess: () => {
                 setSourceToEdit(null);
                 editForm.reset();

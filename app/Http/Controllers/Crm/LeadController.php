@@ -74,7 +74,7 @@ class LeadController extends Controller
             'branches' => \App\Models\Branch::all(),
             'leadSources' => \App\Models\LeadSource::all(),
             'levels' => \App\Models\Level::all(),
-            'packages' => \App\Models\Package::all(),
+            'packages' => \App\Models\Package::where('is_active', true)->get(),
             'leadStatuses' => \App\Models\LeadStatus::all(),
         ]);
     }

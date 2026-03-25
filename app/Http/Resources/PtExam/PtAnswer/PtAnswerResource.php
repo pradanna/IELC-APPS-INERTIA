@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources\PtExam\PtAnswer;
 
+use App\Http\Resources\PtExam\PtQuestion\PtQuestionResource;
 use App\Http\Resources\PtExam\PtSession\PtSessionResource;
-use App\Http\Resources\PtQuestion\PtQuestionResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
