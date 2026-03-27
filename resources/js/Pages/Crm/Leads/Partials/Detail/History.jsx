@@ -141,10 +141,10 @@ const EventContent = ({ event, leadStatuses }) => {
                                         leadStatuses?.length > 0
                                     ) {
                                         const oldStat = leadStatuses.find(
-                                            (s) => s.id === Number(oldValue),
+                                            (s) => String(s.id) === String(oldValue),
                                         );
                                         const newStat = leadStatuses.find(
-                                            (s) => s.id === Number(newValue),
+                                            (s) => String(s.id) === String(newValue),
                                         );
                                         if (oldStat) oldValue = oldStat.name;
                                         if (newStat) newValue = newStat.name;

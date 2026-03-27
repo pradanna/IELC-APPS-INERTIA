@@ -43,9 +43,9 @@ class StoreLeadFollowupAction
                 $lead->update(['interest_package_id' => $interestPackageId]);
             }
 
-            // Jika status Placement Test (ID 4) dipilih, masukkan ke tabel pt_sessions
+            // Jika status Placement Test (UUID: c0a80101-0000-0000-0000-000000000004) dipilih, masukkan ke tabel pt_sessions
             $ptExamId = $data['pt_exam_id'] ?? request('pt_exam_id');
-            if ($leadStatusId && (int)$leadStatusId === 4 && !empty($ptExamId)) {
+            if ($leadStatusId && $leadStatusId === 'c0a80101-0000-0000-0000-000000000004' && !empty($ptExamId)) {
 
                 // Mencegah duplikasi data: cek apakah pt_session yang sama sudah digenerate (misal oleh aksi UpdateLeadStatus)
                 $sessionExists = DB::table('pt_sessions')

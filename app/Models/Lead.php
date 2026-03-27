@@ -31,6 +31,8 @@ class Lead extends Model
         'lead_source_id',
         'lead_status_id',
         'notes',
+        'pending_profile_data',
+        'is_profile_pending',
         'interest_level_id',
         'interest_package_id',
         'temperature',
@@ -45,6 +47,8 @@ class Lead extends Model
     protected $casts = [
         'dob' => 'date',
         'joined_at' => 'datetime',
+        'pending_profile_data' => 'array',
+        'is_profile_pending' => 'boolean',
     ];
 
     /**

@@ -12,7 +12,9 @@ import {
 import FinanceKpiCards from "./Partials/FinanceKpiCards";
 import FinanceActionTables from "./Partials/FinanceActionTables";
 import FinanceCharts from "./Partials/FinanceCharts";
+import InvoiceTableTab from "./Partials/InvoiceTableTab";
 import AdminLayout from "@/Layouts/AdminLayout";
+import { LayoutDashboard } from "lucide-react";
 import Modal from "@/Components/ui/Modal";
 import DataTable from "@/Components/ui/DataTable";
 import Select from "react-select";
@@ -20,7 +22,15 @@ import TextInput from "@/Components/form/TextInput";
 import InputLabel from "@/Components/ui/InputLabel";
 import { formatRp } from "@/lib/utils";
 
+// Modals
+import PendingInvoicesModal from "./Modals/PendingInvoicesModal";
+import InvoicesListModal from "./Modals/InvoicesListModal";
+import InvoiceFormModal from "./Modals/InvoiceFormModal";
+import AddPackageModal from "./Modals/AddPackageModal";
+import PaymentModal from "./Modals/PaymentModal";
+
 export default function Dashboard({ kpis, lists, charts, packages = [] }) {
+    const [activeTab, setActiveTab] = useState('dashboard');
     const { auth } = usePage().props;
     const userRole = auth?.user?.role || "";
 
@@ -499,579 +509,185 @@ export default function Dashboard({ kpis, lists, charts, packages = [] }) {
                             <Download className="w-4 h-4 text-gray-500" />
                             Export Laporan
                         </button>
-                        <button
+                        {/* <button
                             type="button"
                             className="inline-flex items-center gap-2 bg-primary-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 rounded-lg transition-colors"
                         >
                             <FileText className="w-4 h-4" />
                             Buat Tagihan Manual
+                        </button> */}
+                    </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="border-b border-gray-200 mt-2">
+                    <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button
+                            onClick={() => setActiveTab('dashboard')}
+                            className={`${
+                                activeTab === 'dashboard'
+                                    ? 'border-primary-500 text-primary-600'
+                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                            } whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                        >
+                            <LayoutDashboard className="w-4 h-4" />
+                            Overview
                         </button>
-                    </div>
+                        <button
+                            onClick={() => setActiveTab('invoices')}
+                            className={`${
+                                activeTab === 'invoices'
+                                    ? 'border-primary-500 text-primary-600'
+                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                            } whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                        >
+                            <FileText className="w-4 h-4" />
+                            Data Tagihan (Invoices)
+                        </button>
+                    </nav>
                 </div>
 
-                {/* Lapis Atas: KPI Highlights */}
-                <FinanceKpiCards kpis={kpis} onCardClick={handleCardClick} />
+                <div className="mt-4">
+                    {activeTab === 'dashboard' && (
+                        <div className="space-y-6">
+                            {/* Lapis Atas: KPI Highlights */}
+                            <FinanceKpiCards kpis={kpis} onCardClick={handleCardClick} />
 
-                {/* Lapis Tengah: To-Do Lists */}
-                <FinanceActionTables
-                    lists={lists}
-                    onProcessPayment={(invoice) => {
-                        setSelectedInvoiceForPayment(invoice);
-                        setPaymentMethod("cash");
-                        setIsPaymentModalOpen(true);
-                    }}
-                />
-
-                {/* Lapis Bawah: Analytics */}
-                <FinanceCharts charts={charts} />
-            </div>
-
-            {/* Modal Leads Menunggu Tagihan */}
-            <Modal
-                show={isPendingInvoiceModalOpen}
-                onClose={() => setIsPendingInvoiceModalOpen(false)}
-                title="Daftar Lead Menunggu Tagihan"
-                maxWidth="4xl"
-            >
-                <div className="mb-4">
-                    <DataTable
-                        columns={pendingInvoiceColumns}
-                        data={lists.pending_invoices_leads || []}
-                    />
-                </div>
-                <div className="flex justify-end gap-3 mt-4 border-t border-gray-100 pt-4">
-                    <button
-                        onClick={() => setIsPendingInvoiceModalOpen(false)}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                    >
-                        Tutup
-                    </button>
-                </div>
-            </Modal>
-
-            {/* Modal Tagihan Belum Lunas */}
-            <Modal
-                show={isUnpaidInvoiceModalOpen}
-                onClose={() => setIsUnpaidInvoiceModalOpen(false)}
-                title={
-                    invoiceModalMode === "unpaid"
-                        ? "Daftar Tagihan Belum Lunas"
-                        : invoiceModalMode === "verification"
-                          ? "Daftar Menunggu Verifikasi"
-                          : "Daftar Pendapatan Bulan Ini"
-                }
-                maxWidth="7xl"
-            >
-                <div className="mb-4">
-                    <DataTable
-                        columns={unpaidInvoiceColumns}
-                        data={
-                            invoiceModalMode === "unpaid"
-                                ? lists.unpaid_invoices || []
-                                : invoiceModalMode === "verification"
-                                  ? lists.pending_verifications_list || []
-                                  : lists.revenue_this_month_list || []
-                        }
-                    />
-                </div>
-                <div className="flex justify-end gap-3 mt-4 border-t border-gray-100 pt-4">
-                    <button
-                        onClick={() => setIsUnpaidInvoiceModalOpen(false)}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                    >
-                        Tutup
-                    </button>
-                </div>
-            </Modal>
-
-            {/* Modal Buat Invoice */}
-            <Modal
-                show={isCreateInvoiceModalOpen}
-                onClose={() => setIsCreateInvoiceModalOpen(false)}
-                title="Rincian Pembuatan Invoice"
-                maxWidth="md"
-            >
-                {selectedLeadForInvoice && (
-                    <div className="space-y-5">
-                        {/* Info Lead & Paket */}
-                        <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                            <p className="text-xs text-blue-600 mb-1">
-                                Nama Siswa / Lead
-                            </p>
-                            <p className="text-sm font-semibold text-blue-900">
-                                {selectedLeadForInvoice.name}
-                            </p>
-
-                            <p className="text-xs text-blue-600 mt-3 mb-1">
-                                Paket yang Diminati
-                            </p>
-                            <p className="text-sm font-semibold text-blue-900">
-                                {selectedLeadForInvoice.interest_package
-                                    ?.name || "Tidak ada paket yang dipilih"}
-                            </p>
-                        </div>
-
-                        {/* Rincian Tagihan */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                                <h4 className="text-sm font-semibold text-gray-900">
-                                    Komponen Tagihan
-                                </h4>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setAddPackageTarget("create");
-                                        setIsAddPackageModalOpen(true);
-                                    }}
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 px-2 py-1 rounded transition-colors"
-                                >
-                                    <Plus size={14} /> Tambah
-                                </button>
-                            </div>
-
-                            <div className="flex items-center justify-between text-sm mt-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={includePtFee}
-                                        onChange={(e) =>
-                                            setIncludePtFee(e.target.checked)
-                                        }
-                                        className="h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                                    />
-                                    <span className="text-gray-600">
-                                        Biaya Placement Test
-                                    </span>
-                                </label>
-                                {includePtFee ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-gray-500">
-                                            Rp
-                                        </span>
-                                        <input
-                                            type="number"
-                                            value={ptFee}
-                                            onChange={(e) =>
-                                                setPtFee(Number(e.target.value))
-                                            }
-                                            className="w-28 text-right text-sm border-gray-300 rounded-md py-1 px-2 focus:ring-primary-500 focus:border-primary-500"
-                                        />
-                                    </div>
-                                ) : (
-                                    <span className="text-gray-400">Rp 0</span>
-                                )}
-                            </div>
-
-                            {/* Invoice Items */}
-                            {additionalItems.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="flex items-center justify-between text-sm mt-2 group"
-                                >
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleRemoveItem(item.id)
-                                            }
-                                            className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            title="Hapus komponen"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                        <span>{item.name}</span>
-                                    </div>
-                                    <span className="font-medium text-gray-900">
-                                        {formatRp(item.price)}
-                                    </span>
-                                </div>
-                            ))}
-
-                            <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-2">
-                                <span className="font-bold text-gray-900">
-                                    Total Invoice
-                                </span>
-                                <span className="font-bold text-primary-700 text-lg">
-                                    {formatRp(totalAmount)}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                            <button
-                                onClick={() =>
-                                    setIsCreateInvoiceModalOpen(false)
-                                }
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={submitInvoice}
-                                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
-                            >
-                                Simpan & Terbitkan
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
-            {/* Modal Edit Invoice */}
-            <Modal
-                show={isEditInvoiceModalOpen}
-                onClose={() => setIsEditInvoiceModalOpen(false)}
-                title="Edit Rincian Invoice"
-                maxWidth="md"
-            >
-                {selectedInvoiceForEdit && (
-                    <div className="space-y-5">
-                        <div className="bg-amber-50/50 p-4 rounded-lg border border-amber-100">
-                            <p className="text-xs text-amber-600 mb-1">
-                                No. Invoice
-                            </p>
-                            <p className="text-sm font-semibold text-amber-900">
-                                {selectedInvoiceForEdit.invoice_number}
-                            </p>
-                            <p className="text-xs text-amber-600 mt-3 mb-1">
-                                Nama Siswa / Lead
-                            </p>
-                            <p className="text-sm font-semibold text-amber-900">
-                                {selectedInvoiceForEdit.lead?.name || "-"}
-                            </p>
-                        </div>
-
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                                <h4 className="text-sm font-semibold text-gray-900">
-                                    Komponen Tagihan
-                                </h4>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setAddPackageTarget("edit");
-                                        setIsAddPackageModalOpen(true);
-                                    }}
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 px-2 py-1 rounded transition-colors"
-                                >
-                                    <Plus size={14} /> Tambah
-                                </button>
-                            </div>
-
-                            <div className="flex items-center justify-between text-sm mt-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={editIncludePtFee}
-                                        onChange={(e) =>
-                                            setEditIncludePtFee(
-                                                e.target.checked,
-                                            )
-                                        }
-                                        className="h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
-                                    />
-                                    <span className="text-gray-600">
-                                        Biaya Placement Test
-                                    </span>
-                                </label>
-                                {editIncludePtFee ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-gray-500">
-                                            Rp
-                                        </span>
-                                        <input
-                                            type="number"
-                                            value={editPtFee}
-                                            onChange={(e) =>
-                                                setEditPtFee(
-                                                    Number(e.target.value),
-                                                )
-                                            }
-                                            className="w-28 text-right text-sm border-gray-300 rounded-md py-1 px-2 focus:ring-primary-500 focus:border-primary-500"
-                                        />
-                                    </div>
-                                ) : (
-                                    <span className="text-gray-400">Rp 0</span>
-                                )}
-                            </div>
-
-                            {editAdditionalItems.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="flex items-center justify-between text-sm mt-2 group"
-                                >
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleRemoveEditItem(item.id)
-                                            }
-                                            className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            title="Hapus komponen"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                        <span>{item.name}</span>
-                                    </div>
-                                    <span className="font-medium text-gray-900">
-                                        {formatRp(item.price)}
-                                    </span>
-                                </div>
-                            ))}
-
-                            <div className="flex justify-between items-center pt-3 border-t border-gray-200 mt-2">
-                                <span className="font-bold text-gray-900">
-                                    Total Invoice
-                                </span>
-                                <span className="font-bold text-primary-700 text-lg">
-                                    {formatRp(editTotalAmount)}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                            <button
-                                onClick={() => setIsEditInvoiceModalOpen(false)}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={submitEditInvoice}
-                                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
-                            >
-                                Simpan Perubahan
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
-            {/* Modal Tambah Komponen */}
-            <Modal
-                show={isAddPackageModalOpen}
-                onClose={() => setIsAddPackageModalOpen(false)}
-                title="Tambah Komponen Tagihan"
-                maxWidth="sm"
-            >
-                <form onSubmit={handleAddPackageSubmit} className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="addPackageType"
-                                value="paket"
-                                checked={addPackageType === "paket"}
-                                onChange={(e) =>
-                                    setAddPackageType(e.target.value)
-                                }
-                                className="text-primary-600 focus:ring-primary-500"
+                            {/* Lapis Tengah: To-Do Lists */}
+                            <FinanceActionTables
+                                lists={lists}
+                                onProcessPayment={(invoice) => {
+                                    setSelectedInvoiceForPayment(invoice);
+                                    setPaymentMethod("cash");
+                                    setIsPaymentModalOpen(true);
+                                }}
                             />
-                            <span className="text-sm font-medium text-gray-700">
-                                Pilih Paket
-                            </span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                name="addPackageType"
-                                value="manual"
-                                checked={addPackageType === "manual"}
-                                onChange={(e) =>
-                                    setAddPackageType(e.target.value)
-                                }
-                                className="text-primary-600 focus:ring-primary-500"
-                            />
-                            <span className="text-sm font-medium text-gray-700">
-                                Input Manual
-                            </span>
-                        </label>
-                    </div>
 
-                    {addPackageType === "paket" ? (
-                        <div>
-                            <InputLabel value="Pilih Paket Tambahan" />
-                            <div className="mt-1">
-                                <Select
-                                    value={
-                                        packageOptions.find(
-                                            (opt) =>
-                                                opt.value === selectedPackageId,
-                                        ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        setSelectedPackageId(
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    options={packageOptions}
-                                    placeholder="-- Pilih Paket --"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    isClearable
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            <div>
-                                <InputLabel value="Nama Komponen" />
-                                <div className="mt-1">
-                                    <TextInput
-                                        type="text"
-                                        value={manualPackageName}
-                                        onChange={(e) =>
-                                            setManualPackageName(e.target.value)
-                                        }
-                                        className="w-full"
-                                        placeholder="Contoh: Modul Tambahan"
-                                        required={addPackageType === "manual"}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <InputLabel value="Harga (Rp)" />
-                                <div className="mt-1">
-                                    <TextInput
-                                        type="number"
-                                        value={manualPackagePrice}
-                                        onChange={(e) =>
-                                            setManualPackagePrice(
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="w-full"
-                                        placeholder="0"
-                                        required={addPackageType === "manual"}
-                                    />
-                                </div>
-                            </div>
+                            {/* Lapis Bawah: Analytics */}
+                            <FinanceCharts charts={charts} />
                         </div>
                     )}
 
-                    <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-4">
-                        <button
-                            type="button"
-                            onClick={() => setIsAddPackageModalOpen(false)}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                        >
-                            Batal
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
-                        >
-                            Tambahkan
-                        </button>
-                    </div>
-                </form>
-            </Modal>
+                    {activeTab === 'invoices' && (
+                        <InvoiceTableTab 
+                            invoices={lists.all_invoices || []} 
+                            canEditOrPay={canEditOrPay}
+                            onEditInvoice={(row) => {
+                                setSelectedInvoiceForEdit(row);
+                                const items = row.items || [];
+                                const ptItem = items.find((i) => i.description === "Biaya Placement Test");
+                                if (ptItem) {
+                                    setEditIncludePtFee(true);
+                                    setEditPtFee(Number(ptItem.unit_price));
+                                } else {
+                                    setEditIncludePtFee(false);
+                                    setEditPtFee(150000);
+                                }
+                                const otherItems = items.filter((i) => i.description !== "Biaya Placement Test")
+                                    .map((i) => ({
+                                        id: i.id,
+                                        name: i.description,
+                                        price: i.unit_price,
+                                    }));
+                                setEditAdditionalItems(otherItems);
+                                setIsEditInvoiceModalOpen(true);
+                            }}
+                            onProcessPayment={(row) => {
+                                setSelectedInvoiceForPayment(row);
+                                setPaymentMethod("cash");
+                                setIsPaymentModalOpen(true);
+                            }}
+                            onViewPdf={(row) => window.open(`/admin/finance/invoices/${row.id}/pdf`, "_blank")}
+                        />
+                    )}
+                </div>
+            </div>
 
-            {/* Modal Proses Pembayaran */}
-            <Modal
+            {/* Modals Modularized */}
+            <PendingInvoicesModal
+                show={isPendingInvoiceModalOpen}
+                onClose={() => setIsPendingInvoiceModalOpen(false)}
+                data={lists.pending_invoices_leads}
+                columns={pendingInvoiceColumns}
+            />
+
+            <InvoicesListModal
+                show={isUnpaidInvoiceModalOpen}
+                onClose={() => setIsUnpaidInvoiceModalOpen(false)}
+                mode={invoiceModalMode}
+                data={
+                    invoiceModalMode === "unpaid"
+                        ? lists.unpaid_invoices
+                        : invoiceModalMode === "verification"
+                        ? lists.pending_verifications_list
+                        : lists.revenue_this_month_list
+                }
+                columns={unpaidInvoiceColumns}
+            />
+
+            <InvoiceFormModal
+                show={isCreateInvoiceModalOpen}
+                onClose={() => setIsCreateInvoiceModalOpen(false)}
+                title="Rincian Pembuatan Invoice"
+                selectedLead={selectedLeadForInvoice}
+                mode="create"
+                includePtFee={includePtFee}
+                setIncludePtFee={setIncludePtFee}
+                ptFee={ptFee}
+                setPtFee={setPtFee}
+                additionalItems={additionalItems}
+                handleRemoveItem={handleRemoveItem}
+                totalAmount={totalAmount}
+                onAddClick={() => {
+                    setAddPackageTarget("create");
+                    setIsAddPackageModalOpen(true);
+                }}
+                onSubmit={submitInvoice}
+            />
+
+            <InvoiceFormModal
+                show={isEditInvoiceModalOpen}
+                onClose={() => setIsEditInvoiceModalOpen(false)}
+                title="Edit Rincian Invoice"
+                selectedInvoice={selectedInvoiceForEdit}
+                mode="edit"
+                includePtFee={editIncludePtFee}
+                setIncludePtFee={setEditIncludePtFee}
+                ptFee={editPtFee}
+                setPtFee={setEditPtFee}
+                additionalItems={editAdditionalItems}
+                handleRemoveItem={handleRemoveEditItem}
+                totalAmount={editTotalAmount}
+                onAddClick={() => {
+                    setAddPackageTarget("edit");
+                    setIsAddPackageModalOpen(true);
+                }}
+                onSubmit={submitEditInvoice}
+            />
+
+            <AddPackageModal
+                show={isAddPackageModalOpen}
+                onClose={() => setIsAddPackageModalOpen(false)}
+                onSubmit={handleAddPackageSubmit}
+                addPackageType={addPackageType}
+                setAddPackageType={setAddPackageType}
+                packageOptions={packageOptions}
+                selectedPackageId={selectedPackageId}
+                setSelectedPackageId={setSelectedPackageId}
+                manualPackageName={manualPackageName}
+                setManualPackageName={setManualPackageName}
+                manualPackagePrice={manualPackagePrice}
+                setManualPackagePrice={setManualPackagePrice}
+                reactSelectStyles={reactSelectStyles}
+            />
+
+            <PaymentModal
                 show={isPaymentModalOpen}
                 onClose={() => setIsPaymentModalOpen(false)}
-                title="Proses Pembayaran Tagihan"
-                maxWidth="sm"
-            >
-                {selectedInvoiceForPayment && (
-                    <div className="space-y-4">
-                        <div className="bg-purple-50/50 p-4 rounded-lg border border-purple-100">
-                            <p className="text-xs text-purple-600 mb-1">
-                                No. Invoice
-                            </p>
-                            <p className="text-sm font-semibold text-purple-900">
-                                {selectedInvoiceForPayment.invoice_number}
-                            </p>
-                            <p className="text-xs text-purple-600 mt-3 mb-1">
-                                Total Tagihan
-                            </p>
-                            <p className="text-sm font-semibold text-purple-900">
-                                {formatRp(
-                                    selectedInvoiceForPayment.total_amount,
-                                )}
-                            </p>
-                        </div>
-
-                        <div className="text-sm text-gray-600 text-center py-2">
-                            Apakah Anda ingin menerima pembayaran ini sebagai
-                            lunas atau menolaknya kembali menjadi belum lunas?
-                        </div>
-
-                        <div>
-                            <InputLabel value="Metode Pembayaran" />
-                            <select
-                                value={paymentMethod}
-                                onChange={(e) =>
-                                    setPaymentMethod(e.target.value)
-                                }
-                                className="mt-1 block w-full rounded-lg border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-                            >
-                                <option value="cash">Cash</option>
-                                <option value="transfer BCA">
-                                    Transfer BCA
-                                </option>
-                                <option value="transfer BNI">
-                                    Transfer BNI
-                                </option>
-                            </select>
-                        </div>
-
-                        <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                            <button
-                                onClick={() => setIsPaymentModalOpen(false)}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={() => {
-                                    router.put(
-                                        route(
-                                            "admin.finance.invoices.update-status",
-                                            selectedInvoiceForPayment.id,
-                                        ),
-                                        {
-                                            status: "unpaid",
-                                        },
-                                        {
-                                            onSuccess: () =>
-                                                setIsPaymentModalOpen(false),
-                                            preserveScroll: true,
-                                        },
-                                    );
-                                }}
-                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
-                            >
-                                Tolak
-                            </button>
-                            <button
-                                onClick={() => {
-                                    router.put(
-                                        route(
-                                            "admin.finance.invoices.update-status",
-                                            selectedInvoiceForPayment.id,
-                                        ),
-                                        {
-                                            status: "paid",
-                                            payment_method: paymentMethod,
-                                        },
-                                        {
-                                            onSuccess: () =>
-                                                setIsPaymentModalOpen(false),
-                                            preserveScroll: true,
-                                        },
-                                    );
-                                }}
-                                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
-                            >
-                                Terima (Lunas)
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
+                selectedInvoice={selectedInvoiceForPayment}
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+            />
         </AdminLayout>
     );
 }

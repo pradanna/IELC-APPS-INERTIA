@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('leads', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
+            $table->foreignUuid('branch_id')->constrained('branches')->onDelete('cascade');
             $table->string('name');
             $table->date('dob')->nullable();
             $table->string('phone')->nullable();
@@ -21,12 +21,18 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('parent_name')->nullable();
             $table->string('parent_phone')->nullable();
-            $table->foreignId('lead_source_id')->nullable()->constrained('lead_sources')->onDelete('set null');
-            $table->foreignId('lead_status_id')->default(1)->constrained('lead_statuses');
-            $table->enum('temperature', ['cold', 'warm', 'hot'])->default('warm'); // New field requested by user
+            $table->foreignUuid('lead_source_id')->nullable()->constrained('lead_sources')->onDelete('set null');
+            $table->foreignUuid('lead_status_id')->default('c0a80101-0000-0000-0000-000000000001')->constrained('lead_statuses');
+            // temperature enum: 'cold', 'warm', 'hot'
+            $table->string('temperature')->default('warm'); // New field requested by user
             $table->text('notes')->nullable();
-            $table->foreignId('interest_level_id')->nullable()->constrained('levels')->onDelete('set null');
-            $table->foreignId('interest_package_id')->nullable()->constrained('packages')->onDelete('set null');
+            
+            // Pending Profile Data (Self-service update for leads)
+            $table->text('pending_profile_data')->nullable();
+            $table->boolean('is_profile_pending')->default(false);
+
+            $table->foreignUuid('interest_level_id')->nullable()->constrained('levels')->onDelete('set null');
+            $table->foreignUuid('interest_package_id')->nullable()->constrained('packages')->onDelete('set null');
             $table->dateTime('last_contacted_at')->nullable();
             $table->dateTime('next_followup_date')->nullable();
             $table->dateTime('joined_at')->nullable(); // Menandai kapan lead berubah menjadi enrolled

@@ -14,18 +14,18 @@ class UpdateLeadStatus
      * Updates the status of a given lead.
      *
      * @param Lead $lead The lead to update.
-     * @param int $statusId The new status ID.
+     * @param string $statusId The new status ID.
      * @return Lead The updated lead instance.
      */
-    public function execute(Lead $lead, int $statusId): Lead
+    public function execute(Lead $lead, string $statusId): Lead
     {
         // Tangkap status lama
         $oldStatusId = $lead->lead_status_id;
 
         $lead->lead_status_id = $statusId;
 
-        // Asumsi ID 5 adalah status 'Joined' / 'Enrolled' (sesuai dengan LeadController index)
-        if ($statusId == 5 && is_null($lead->joined_at)) {
+        // Asumsi UUID 'c0a80101-0000-0000-0000-000000000006' adalah status 'Joined' / 'Enrolled'
+        if ($statusId === 'c0a80101-0000-0000-0000-000000000006' && is_null($lead->joined_at)) {
             $lead->joined_at = now();
         }
 
@@ -37,14 +37,14 @@ class UpdateLeadStatus
 
         $lead->save();
 
-        // Tangkap eksekusi jika status Placement Test (ID 4) dilakukan dari update inline
-        if ($statusId == 4) {
+        // Tangkap eksekusi jika status Placement Test (UUID c0a80101-0000-0000-0000-000000000004) dilakukan dari update inline
+        if ($statusId === 'c0a80101-0000-0000-0000-000000000004') {
             $ptExamId = request('pt_exam_id');
             if (!empty($ptExamId)) {
                 $rawDate = request('scheduled_at');
                 $scheduledAt = $rawDate ? Carbon::parse($rawDate)->format('Y-m-d H:i:s') : now();
 
-                DB::table('pt_sessions')->insert([
+                \App\Models\PtSession::create([
                     'lead_id' => $lead->id,
                     'pt_exam_id' => $ptExamId,
                     'status' => 'pending',

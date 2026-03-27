@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StudyClass extends Model
 {
@@ -14,8 +15,17 @@ class StudyClass extends Model
     protected $fillable = [
         'name',
         'package_id',
-        'teacher_id',
     ];
+
+    public function classSchedules(): HasMany
+    {
+        return $this->hasMany(ClassSchedule::class);
+    }
+
+    public function classSessions(): HasMany
+    {
+        return $this->hasMany(ClassSession::class);
+    }
 
     // Relasi ke paket yang dipilih (Master Package)
     public function package(): BelongsTo
@@ -23,10 +33,10 @@ class StudyClass extends Model
         return $this->belongsTo(Package::class);
     }
 
-    // Relasi ke tabel guru/pengajar (Asumsi menggunakan model User)
-    public function teacher(): BelongsTo
+    // Relasi Many-to-Many ke tabel guru/pengajar (Teacher profile)
+    public function teachers(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'teacher_id');
+        return $this->belongsToMany(Teacher::class, 'study_class_teacher', 'study_class_id', 'teacher_id')->withTimestamps();
     }
 
     // Relasi Many-to-Many untuk melihat daftar siswa di kelas ini

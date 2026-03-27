@@ -62,7 +62,7 @@ export default function LeadSourcesTable({ leadSources }) {
     };
 
     const columns = [
-        { header: "ID", accessor: "id" },
+
         { header: "Name", accessor: "name" },
         { header: "Created At", accessor: "created_at" },
         {

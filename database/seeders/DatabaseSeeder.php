@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             BranchSeeder::class,
+            RoomSeeder::class,
             LevelSeeder::class,
             PackageSeeder::class,
             LeadStatusSeeder::class,
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
             UserRoleSeeder::class,
             LeadSeeder::class,
             LeadFollowupSeeder::class,
+            PtExamSeeder::class,
         ]);
     }
 }

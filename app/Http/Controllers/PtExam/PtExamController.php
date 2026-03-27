@@ -30,7 +30,7 @@ class PtExamController extends Controller
         ];
 
         // Mengambil daftar anak yang sedang atau akan melakukan Placement Test
-        $tests = PtSession::with(['lead', 'ptExam'])->latest()->take(50)->get()->map(function ($session) {
+        $tests = PtSession::with(['lead.leadStatus', 'lead.interestPackage', 'ptExam'])->latest()->take(50)->get()->map(function ($session) {
             return [
                 'id' => $session->id,
                 'lead_id' => $session->lead_id,
@@ -43,6 +43,12 @@ class PtExamController extends Controller
                 'score' => $session->final_score,
                 'recommended_level' => $session->recommended_level,
                 'token' => $session->token,
+                'lead_status' => $session->lead->leadStatus ? [
+                    'id' => $session->lead->leadStatus->id,
+                    'name' => $session->lead->leadStatus->name,
+                    'bg_color' => $session->lead->leadStatus->bg_color,
+                    'text_color' => $session->lead->leadStatus->text_color,
+                ] : null,
             ];
         });
 

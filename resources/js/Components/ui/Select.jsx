@@ -92,7 +92,7 @@ const Select = ({
 
             {/* --- Dropdown Panel --- */}
             {isOpen && (
-                <div className="absolute top-full mt-1 min-w-full w-max bg-white shadow-xl border border-gray-100 rounded-lg z-50 overflow-hidden">
+                <div className="absolute top-full mt-1 min-w-full w-max bg-white shadow-xl border border-gray-100 rounded-lg z-[100] overflow-hidden">
                     <ul className="max-h-60 overflow-y-auto py-1">
                         {options.map((option, index) => {
                             const optionValue = isObjectOptions

@@ -17,12 +17,9 @@ class StudentFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'dob' => fake()->dateTimeBetween('-20 years', '-7 years'),
-            'phone' => fake()->phoneNumber(),
-            'address' => fake()->address(),
-            'parent_name' => fake()->name('female'),
-            'parent_phone' => fake()->phoneNumber(),
+            'lead_id' => \App\Models\Lead::factory(),
+            'nis' => fake()->unique()->numerify('ST-####-####'),
+            'status' => fake()->randomElement(['active', 'graduated', 'dropout']),
         ];
     }
 }

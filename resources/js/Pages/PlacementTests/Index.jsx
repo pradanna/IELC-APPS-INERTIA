@@ -14,6 +14,7 @@ import {
     MessageCircle,
     CreditCard,
 } from "lucide-react";
+import LeadStatusBadge from "@/Components/ui/StatusBadge";
 import TextInput from "@/Components/form/TextInput";
 import TextArea from "@/Components/ui/TextArea";
 import Modal from "@/Components/ui/Modal";
@@ -215,7 +216,7 @@ export default function PlacementTestIndex({
                                                 scope="col"
                                                 className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                             >
-                                                Status
+                                                Status Ujian
                                             </th>
                                             <th
                                                 scope="col"
@@ -238,28 +239,36 @@ export default function PlacementTestIndex({
                                                 className="hover:bg-gray-50 transition-colors"
                                             >
                                                 <td className="px-5 py-3 whitespace-nowrap">
-                                                    <div
-                                                        className="cursor-pointer"
-                                                        onClick={() =>
-                                                            alert(
-                                                                `Buka drawer detail untuk Lead: ${test.lead_name}`,
-                                                            )
-                                                        }
-                                                    >
-                                                        <p className="text-sm font-semibold text-primary-600 hover:text-primary-800 hover:underline">
-                                                            {test.lead_name}
-                                                        </p>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-sm font-semibold text-primary-600 truncate max-w-[150px]">
+                                                                {test.lead_name}
+                                                            </p>
+                                                            
+                                                        </div>
                                                         <p className="text-xs text-gray-500">
                                                             {test.wa}
                                                         </p>
+                                                        <p>
+                                                            {test.lead_status && (
+                                                                <LeadStatusBadge
+                                                                    backgroundColor={test.lead_status.bg_color}
+                                                                    color={test.lead_status.text_color}
+                                                                    className="px-1.5 py-0 scale-90"
+                                                                >
+                                                                    {test.lead_status.name.toUpperCase()}
+                                                                </LeadStatusBadge>
+                                                            )}
+                                                        </p>
                                                     </div>
                                                 </td>
-                                                <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-700">
+                                                <td className="px-5 py-3 whitespace-wrap text-sm text-gray-700">
                                                     {test.package_name}
                                                 </td>
-                                                <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-700">
+                                                <td className="px-5 py-3 whitespace-wrap text-sm text-gray-700">
                                                     {test.scheduled_at}
                                                 </td>
+
                                                 <td className="px-5 py-3 whitespace-nowrap">
                                                     <StatusBadge
                                                         status={test.status}
@@ -615,7 +624,7 @@ export default function PlacementTestIndex({
 
                         <div className="pt-4 flex flex-col sm:flex-row items-center justify-end border-t border-gray-100">
                             <button
-                                onClick={() => handleUpdateStatus(5)}
+                                onClick={() => handleUpdateStatus('c0a80101-0000-0000-0000-000000000005')}
                                 disabled={isUpdatingStatus}
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-wait"
                             >

@@ -28,7 +28,8 @@ class UpdateLeadStatusRequest extends FormRequest
         return [
             'lead_status_id' => [
                 'required',
-                'integer',
+                'string',
+                'uuid',
                 'exists:lead_statuses,id',
             ],
         ];

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('monthly_targets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('branch_id')->constrained()->cascadeOnDelete();
             $table->tinyInteger('month');
             $table->year('year');
             $table->integer('target_enrolled');

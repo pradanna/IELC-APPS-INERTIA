@@ -9,8 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pt_questions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('pt_exam_id')->constrained()->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('pt_exam_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('pt_question_group_id')->nullable()->constrained('pt_question_groups')->nullOnDelete();
             $table->text('question_text');
             $table->string('audio_path')->nullable();
             $table->integer('points')->default(1);

@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition, Menu } from "@headlessui/react";
-import { X, User, ChevronDown, PhoneCall } from "lucide-react";
+import { X, User, ChevronDown, PhoneCall, Pencil } from "lucide-react";
 import StatusBadge from "@/Components/ui/StatusBadge";
 import DetailLead from "./DetailLead";
 import History from "./History";
@@ -14,6 +14,7 @@ export default function LeadDetailPanel({
     onStatusUpdate,
     onFollowupClick,
     onEditClick,
+    onReviewProfile,
 }) {
     const [activeTab, setActiveTab] = useState("details");
 
@@ -52,9 +53,9 @@ export default function LeadDetailPanel({
                                 leaveTo="translate-x-full"
                             >
                                 <Dialog.Panel className="pointer-events-auto w-screen max-w-xl">
-                                    <div className="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
-                                        {/* Header */}
-                                        <div className="bg-gray-50 px-4 py-5 sm:px-6">
+                                    <div className="flex h-full flex-col bg-white shadow-xl">
+                                        {/* Header - Fixed at top */}
+                                        <div className="bg-gray-50 px-4 py-5 sm:px-6 border-b border-gray-200 z-10">
                                             <div className="flex items-start justify-between">
                                                 <Dialog.Title className="text-base font-semibold leading-6 text-gray-900">
                                                     Lead Details
@@ -71,18 +72,18 @@ export default function LeadDetailPanel({
                                             </div>
                                         </div>
 
-                                        {/* Main Content */}
-                                        <div className="relative flex-1 flex flex-col pb-6">
-                                            {/* Top Info (Selalu tampil di atas) */}
-                                            <div className="px-4 py-6 sm:px-6 flex items-center gap-4">
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+                                        {/* The rest of the content - We use a scrollable container for everything below the title */}
+                                        <div className="flex-1 overflow-y-auto">
+                                            {/* Top Info (Always visible, but now scrolls with content below Title) */}
+                                            <div className="px-4 py-6 sm:px-6 flex items-center gap-4 border-b border-gray-50 bg-white">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-600 shrink-0">
                                                     <User className="h-6 w-6" />
                                                 </div>
-                                                <div className="grow">
-                                                    <h3 className="text-lg font-bold text-gray-900">
+                                                <div className="grow min-w-0">
+                                                    <h3 className="text-lg font-bold text-gray-900 truncate">
                                                         {lead?.name}
                                                     </h3>
-                                                    <div className="flex items-center gap-x-2 mt-1">
+                                                    <div className="flex items-center gap-x-2 mt-1 flex-wrap gap-y-1">
                                                         {(() => {
                                                             const currentStatus =
                                                                 leadStatuses.find(
@@ -122,99 +123,22 @@ export default function LeadDetailPanel({
                                                                 Follow-up
                                                             </span>
                                                         </button>
-                                                        <Menu
-                                                            as="div"
-                                                            className="relative inline-block text-left"
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => onEditClick && onEditClick(lead?.id)}
+                                                            className="inline-flex items-center justify-center gap-x-1 rounded-md bg-white px-2 py-1 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
                                                         >
-                                                            {/* <div>
-                                                                <Menu.Button className="inline-flex items-center justify-center gap-x-1 rounded-md bg-gray-50 px-2 py-1 text-xs font-semibold text-gray-600 shadow-sm ring-1 ring-inset ring-gray-200 hover:bg-gray-100">
-                                                                    <span>
-                                                                        Ubah
-                                                                        Status
-                                                                    </span>
-                                                                    <ChevronDown className="-mr-0.5 h-4 w-4 text-gray-400" />
-                                                                </Menu.Button>
-                                                            </div> */}
-
-                                                            <Transition
-                                                                as={Fragment}
-                                                                enter="transition ease-out duration-100"
-                                                                enterFrom="transform opacity-0 scale-95"
-                                                                enterTo="transform opacity-100 scale-100"
-                                                                leave="transition ease-in duration-75"
-                                                                leaveFrom="transform opacity-100 scale-100"
-                                                                leaveTo="transform opacity-0 scale-95"
-                                                            >
-                                                                <Menu.Items className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                                    <div className="py-1">
-                                                                        {leadStatuses.map(
-                                                                            (
-                                                                                status,
-                                                                            ) => {
-                                                                                const isCurrent =
-                                                                                    lead?.lead_status_id ===
-                                                                                    status.id;
-                                                                                return (
-                                                                                    <Menu.Item
-                                                                                        key={
-                                                                                            status.id
-                                                                                        }
-                                                                                        disabled={
-                                                                                            isCurrent
-                                                                                        }
-                                                                                    >
-                                                                                        {({
-                                                                                            active,
-                                                                                            disabled,
-                                                                                        }) => (
-                                                                                            <button
-                                                                                                type="button"
-                                                                                                onClick={(
-                                                                                                    e,
-                                                                                                ) => {
-                                                                                                    if (
-                                                                                                        !disabled &&
-                                                                                                        onStatusUpdate
-                                                                                                    ) {
-                                                                                                        onStatusUpdate(
-                                                                                                            lead.id,
-                                                                                                            status.id,
-                                                                                                        );
-                                                                                                    }
-                                                                                                }}
-                                                                                                className={`${
-                                                                                                    active
-                                                                                                        ? "bg-gray-100 text-gray-900"
-                                                                                                        : "text-gray-700"
-                                                                                                } ${disabled ? "opacity-50 cursor-not-allowed" : ""} flex w-full items-center gap-2 px-4 py-2 text-sm text-left`}
-                                                                                            >
-                                                                                                <span
-                                                                                                    className="w-2 h-2 rounded-full border border-gray-300"
-                                                                                                    style={{
-                                                                                                        backgroundColor:
-                                                                                                            status.bg_color ||
-                                                                                                            "#d1d5db",
-                                                                                                    }}
-                                                                                                ></span>
-                                                                                                {
-                                                                                                    status.name
-                                                                                                }
-                                                                                            </button>
-                                                                                        )}
-                                                                                    </Menu.Item>
-                                                                                );
-                                                                            },
-                                                                        )}
-                                                                    </div>
-                                                                </Menu.Items>
-                                                            </Transition>
-                                                        </Menu>
+                                                            <Pencil className="-ml-0.5 h-3.5 w-3.5 text-gray-400" />
+                                                            <span>
+                                                                Edit
+                                                            </span>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Tabs Navigation */}
-                                            <div className="border-b border-gray-200 px-4 sm:px-6">
+                                            {/* Tabs Navigation - Sticky under the Top Info? No, keep it simple for now as requested. */}
+                                            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 sm:px-6">
                                                 <nav
                                                     className="-mb-px flex space-x-6"
                                                     aria-label="Tabs"
@@ -272,9 +196,8 @@ export default function LeadDetailPanel({
                                                 {activeTab === "details" && (
                                                     <DetailLead
                                                         lead={lead}
-                                                        onEditClick={
-                                                            onEditClick
-                                                        }
+                                                        onEditClick={onEditClick}
+                                                        onReviewProfile={onReviewProfile}
                                                     />
                                                 )}
 

@@ -16,9 +16,11 @@ class StorePackageRequest extends FormRequest
     {
         return [
             'name'           => ['required', 'string', 'max:255'],
+            'description'    => ['nullable', 'string'],
             'level_id'       => ['required', 'exists:levels,id'],
             'type'           => ['required', Rule::in(['group', 'private', 'semi-private'])],
             'sessions_count' => ['required', 'integer', 'min:1'],
+            'duration_days'  => ['required', 'integer', 'min:1'],
             'price'          => ['required', 'numeric', 'min:0'],
             'is_active'      => ['boolean'],
         ];

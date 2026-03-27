@@ -71,6 +71,12 @@ const menuItems = [
                 href: route("admin.master.index"),
                 name: "admin.master.index",
             },
+            {
+                icon: <Building2 size={20} />,
+                text: "Class",
+                href: route("admin.study-classes.index"),
+                name: "admin.study-classes.*",
+            },
         ],
     },
     {
@@ -78,15 +84,15 @@ const menuItems = [
         items: [
             {
                 icon: <Users size={20} />,
-                text: "Staff",
-                href: "#",
-                name: "staff",
+                text: "Teachers",
+                href: route("admin.teachers.index"),
+                name: "admin.teachers.*",
             },
             {
                 icon: <UserCircle size={20} />,
                 text: "Students",
-                href: "#",
-                name: "students",
+                href: route("admin.students.index"),
+                name: "admin.students.*",
             },
         ],
     },

@@ -42,10 +42,18 @@ class LeadController extends Controller
             });
         }
 
-        // Fetch leads with related data
         $leads = $query->with(['interestLevel', 'interestPackage', 'activities.causer', 'followups.user'])
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($lead) {
+                // Generate URL that will expire in 24 hours
+                $lead->profile_update_url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                    'public.lead.update', 
+                    now()->addDay(), 
+                    ['lead' => $lead->id]
+                );
+                return $lead;
+            });
 
         $baseStatsQuery = Lead::query();
         $targetQuery = MonthlyTarget::where('month', now()->month)
@@ -63,10 +71,10 @@ class LeadController extends Controller
             'filters' => $request->only('search'),
             'stats' => [
                 'total' => (clone $baseStatsQuery)->count(),
-                'new' => (clone $baseStatsQuery)->where('lead_status_id', 1)->count(),
-                'contacted' => (clone $baseStatsQuery)->where('lead_status_id', 2)->count(),
-                'enrolled' => (clone $baseStatsQuery)->where('lead_status_id', 5)->count(), // 5 = Joined
-                'lost' => (clone $baseStatsQuery)->where('lead_status_id', 6)->count(),
+                'new' => (clone $baseStatsQuery)->where('lead_status_id', '0ca51d27-0466-41fa-9cd0-02e0b57e7fc0')->count(),
+                'contacted' => (clone $baseStatsQuery)->where('lead_status_id', '4c3d8030-22c6-4152-a567-0cc4de7aef92')->count(),
+                'enrolled' => (clone $baseStatsQuery)->where('lead_status_id', '9571e1cd-fbda-476c-9a4d-e9cde60b1357')->count(), // 6 = Joined/Enrolled
+                'lost' => (clone $baseStatsQuery)->where('lead_status_id', 'e2079de6-e3d8-4f27-802c-7b243fc4a3f1')->count(),
             ],
             'monthlyTarget' => (int) $targetQuery->sum('target_enrolled'),
             'monthlyTargets' => $targetQuery->get(),
@@ -155,5 +163,36 @@ class LeadController extends Controller
             Log::error("Error saat mengupdate status Lead #{$lead->id}: " . $e->getMessage());
             return Redirect::back()->withErrors(['error' => 'Terjadi kesalahan sistem saat mengubah status.']);
         }
+    }
+
+    public function reviewProfileUpdate(Request $request, Lead $lead): RedirectResponse
+    {
+        $request->validate(['action' => 'required|in:accept,reject']);
+
+        if ($request->action === 'accept' && $lead->is_profile_pending) {
+            // Get data from cast array or decode if needed
+            $newData = $lead->pending_profile_data ?: [];
+            
+            // Clean data to ensure only relevant fields are updated
+            $safeFields = ['name', 'phone', 'email', 'dob', 'address', 'parent_name', 'parent_phone'];
+            $updateFields = array_intersect_key($newData, array_flip($safeFields));
+
+            $lead->update(array_merge($updateFields, [
+                'pending_profile_data' => null,
+                'is_profile_pending' => false,
+            ]));
+
+            $message = 'Perubahan profil lead berhasil diterima dan diperbarui.';
+        } else {
+            // Rejection or manual clear
+            $lead->update([
+                'pending_profile_data' => null,
+                'is_profile_pending' => false,
+            ]);
+
+            $message = $request->action === 'reject' ? 'Pembaruan profil ditolak.' : 'Data tertunda berhasil dibersihkan.';
+        }
+
+        return Redirect::back()->with('success', $message);
     }
 }

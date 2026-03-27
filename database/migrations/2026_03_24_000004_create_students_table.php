@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('lead_id')->constrained('leads')->onDelete('cascade');
             $table->string('nis')->unique()->comment('Nomor Induk Siswa');
-            $table->enum('status', ['active', 'graduated', 'dropout'])->default('active');
+            // status enum: 'active', 'graduated', 'dropout'
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }

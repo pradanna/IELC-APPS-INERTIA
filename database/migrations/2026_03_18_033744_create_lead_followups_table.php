@@ -18,11 +18,11 @@ return new class extends Migration
             // Kapan harus dihubungi? (Pakai dateTime agar bisa set jam)
             $table->dateTime('scheduled_at')->nullable();
 
-            // Metode follow up (Bisa untuk nampilin icon WA/Telepon di UI)
-            $table->enum('method', ['whatsapp', 'call', 'email', 'meeting'])->default('whatsapp');
+            // Metode follow up enum: 'whatsapp', 'call', 'email', 'meeting'
+            $table->string('method')->default('whatsapp');
 
-            // Status follow up
-            $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
+            // Status follow up enum: 'pending', 'completed', 'cancelled'
+            $table->string('status')->default('pending');
 
             // Catatan hasil pembicaraan (Diisi SETELAH frontdesk menghubungi Budi)
             $table->text('notes')->nullable();

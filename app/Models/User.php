@@ -10,7 +10,19 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->uuid)) {
+                $model->uuid = (string) \Illuminate\Support\Str::uuid();
+            }
+        });
+    }
+
     use HasFactory, Notifiable;
+
+    protected $appends = ['name'];
 
     /**
      * The attributes that are mass assignable.
@@ -18,11 +30,23 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
         'email',
+        'uuid',
         'password',
         'role',
     ];
+
+    /**
+     * Get dynamic name from role profiles.
+     */
+    public function getNameAttribute(): string
+    {
+        if ($this->role === 'superadmin') return $this->superadmin->name ?? 'Admin';
+        if ($this->role === 'frontdesk') return $this->frontdesk->name ?? 'Frontdesk';
+        if ($this->role === 'teacher') return $this->teacher->name ?? 'Teacher';
+        if ($this->role === 'student') return $this->student->lead->name ?? 'Student';
+        return 'User';
+    }
 
     /**
      * The attributes that should be hidden for serialization.

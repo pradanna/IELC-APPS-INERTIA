@@ -95,7 +95,14 @@ export default function CrmDashboard({
             accessor: "name",
             render: (row) => (
                 <div>
-                    <p className="font-medium text-gray-900">{row.name}</p>
+                    <p className="font-medium text-gray-900 flex items-center gap-1.5">
+                        {row.name}
+                        {row.is_profile_pending && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800" title="Ada pembaruan profil tertunda">
+                                Update
+                            </span>
+                        )}
+                    </p>
                     <p className="text-xs text-gray-500">{row.phone || "-"}</p>
                 </div>
             ),

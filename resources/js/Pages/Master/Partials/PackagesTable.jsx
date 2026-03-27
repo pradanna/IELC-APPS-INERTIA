@@ -6,6 +6,7 @@ import Panel from "@/Components/ui/Panel";
 import TableIconButton from "@/Components/ui/TableIconButton";
 import Select from "@/Components/ui/Select";
 import TextInput from "@/Components/form/TextInput";
+import TextArea from "@/Components/ui/TextArea";
 import { useForm } from "@inertiajs/react";
 import React, { useState } from "react";
 import SearchInput from "@/Components/ui/SearchInput";
@@ -15,23 +16,45 @@ export default function PackagesTable({ packages, levels = [] }) {
     const [isOpen, setIsOpen] = useState(false);
     const [packageToDelete, setPackageToDelete] = useState(null);
     const [packageToEdit, setPackageToEdit] = useState(null);
+    const [packageToView, setPackageToView] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         level_id: "",
+        description: "",
         type: "group",
         sessions_count: "",
+        duration_days: "",
         price: "",
+        is_active: true,
     });
     const deleteForm = useForm();
     const editForm = useForm({
         name: "",
         level_id: "",
+        description: "",
         type: "group",
         sessions_count: "",
+        duration_days: "",
         price: "",
+        is_active: true,
     });
+
+    // Auto calculate duration_days (2 sessions/week)
+    React.useEffect(() => {
+        if (data.sessions_count) {
+            const weeks = Math.ceil(parseInt(data.sessions_count) / 2);
+            setData("duration_days", weeks * 7);
+        }
+    }, [data.sessions_count]);
+
+    React.useEffect(() => {
+        if (editForm.data.sessions_count) {
+            const weeks = Math.ceil(parseInt(editForm.data.sessions_count) / 2);
+            editForm.setData("duration_days", weeks * 7);
+        }
+    }, [editForm.data.sessions_count]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -54,9 +77,12 @@ export default function PackagesTable({ packages, levels = [] }) {
         editForm.setData({
             name: pkg.name,
             level_id: pkg.level_id || "",
+            description: pkg.description || "",
             type: pkg.type || "group",
             sessions_count: pkg.sessions_count || "",
+            duration_days: pkg.duration_days || "",
             price: pkg.price || "",
+            is_active: !!pkg.is_active,
         });
         setPackageToEdit(pkg);
     };
@@ -72,7 +98,7 @@ export default function PackagesTable({ packages, levels = [] }) {
     };
 
     const columns = [
-        { header: "ID", accessor: "id" },
+
         { header: "Name", accessor: "name" },
         {
             header: "Level",
@@ -81,7 +107,11 @@ export default function PackagesTable({ packages, levels = [] }) {
         },
         { header: "Type", accessor: "type" },
         { header: "Sessions", accessor: "sessions_count" },
-        { header: "Price", accessor: "price" },
+        {
+            header: "Price",
+            accessor: "price",
+            render: (row) => row.price_formatted || row.price,
+        },
         {
             header: "Active",
             accessor: "is_active",
@@ -98,14 +128,27 @@ export default function PackagesTable({ packages, levels = [] }) {
             header: "",
             accessor: "actions",
             render: (row) => (
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
+                    <TableIconButton
+                        type="detail"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setPackageToView(row);
+                        }}
+                    />
                     <TableIconButton
                         type="edit"
-                        onClick={() => handleEditClick(row)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleEditClick(row);
+                        }}
                     />
                     <TableIconButton
                         type="delete"
-                        onClick={() => setPackageToDelete(row)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setPackageToDelete(row);
+                        }}
                     />
                 </div>
             ),
@@ -180,6 +223,24 @@ export default function PackagesTable({ packages, levels = [] }) {
                             {errors.name && (
                                 <p className="mt-1 text-xs text-red-600">
                                     {errors.name}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="description" value="Description" />
+                        <div className="mt-1">
+                            <TextArea
+                                id="description"
+                                name="description"
+                                rows={2}
+                                value={data.description}
+                                onChange={(e) => setData("description", e.target.value)}
+                            />
+                            {errors.description && (
+                                <p className="mt-1 text-xs text-red-600">
+                                    {errors.description}
                                 </p>
                             )}
                         </div>
@@ -266,6 +327,33 @@ export default function PackagesTable({ packages, levels = [] }) {
                         </div>
                     </div>
 
+                    <div className="space-y-4">
+                        <div>
+                            <InputLabel htmlFor="duration_days" value="Duration (Weeks)" />
+                            <div className="mt-1">
+                                <TextInput
+                                    id="duration_days"
+                                    type="text"
+                                    readOnly
+                                    disabled
+                                    className="bg-gray-50 text-gray-400"
+                                    value={data.duration_days ? `Berakhir dalam ${data.duration_days / 7} Minggu` : ""}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="is_active"
+                                checked={data.is_active}
+                                onChange={(e) => setData("is_active", e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+                            />
+                            <InputLabel htmlFor="is_active" value="Active Package" />
+                        </div>
+                    </div>
+
                     <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
                         <button
                             type="submit"
@@ -340,6 +428,26 @@ export default function PackagesTable({ packages, levels = [] }) {
                             {editForm.errors.name && (
                                 <p className="mt-1 text-xs text-red-600">
                                     {editForm.errors.name}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="edit_description" value="Description" />
+                        <div className="mt-1">
+                            <TextArea
+                                id="edit_description"
+                                name="description"
+                                rows={2}
+                                value={editForm.data.description}
+                                onChange={(e) =>
+                                    editForm.setData("description", e.target.value)
+                                }
+                            />
+                            {editForm.errors.description && (
+                                <p className="mt-1 text-xs text-red-600">
+                                    {editForm.errors.description}
                                 </p>
                             )}
                         </div>
@@ -433,6 +541,33 @@ export default function PackagesTable({ packages, levels = [] }) {
                         </div>
                     </div>
 
+                    <div className="space-y-4">
+                        <div>
+                            <InputLabel htmlFor="edit_duration_days" value="Duration (Weeks)" />
+                            <div className="mt-1">
+                                <TextInput
+                                    id="edit_duration_days"
+                                    type="text"
+                                    readOnly
+                                    disabled
+                                    className="bg-gray-50 text-gray-400"
+                                    value={editForm.data.duration_days ? `Berakhir dalam ${editForm.data.duration_days / 7} Minggu` : ""}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="edit_is_active"
+                                checked={editForm.data.is_active}
+                                onChange={(e) => editForm.setData("is_active", e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+                            />
+                            <InputLabel htmlFor="edit_is_active" value="Active Package" />
+                        </div>
+                    </div>
+
                     <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
                         <button
                             type="submit"
@@ -450,6 +585,62 @@ export default function PackagesTable({ packages, levels = [] }) {
                         </button>
                     </div>
                 </form>
+            </Modal>
+            <Modal
+                show={!!packageToView}
+                onClose={() => setPackageToView(null)}
+                title="Package Detail"
+            >
+                {packageToView && (
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Package Name</h4>
+                                <p className="mt-1 text-sm font-semibold text-gray-900">{packageToView.name}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</h4>
+                                <p className="mt-1 flex items-center">
+                                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${packageToView.is_active ? "bg-green-50 text-green-700 ring-green-600/20" : "bg-red-50 text-red-700 ring-red-600/20"}`}>
+                                        {packageToView.is_active ? "Active" : "Inactive"}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Level</h4>
+                                <p className="mt-1 text-sm text-gray-900">{packageToView.level?.name || '-'}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Type</h4>
+                                <p className="mt-1 text-sm text-gray-900 capitalize">{packageToView.type}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Sessions</h4>
+                                <p className="mt-1 text-sm text-gray-900">{packageToView.sessions_count} Sesi</p>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</h4>
+                                <p className="mt-1 text-sm text-gray-900">{packageToView.duration_days / 7} Minggu</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Price</h4>
+                            <p className="mt-1 text-lg font-bold text-primary-600">{packageToView.price_formatted}</p>
+                        </div>
+
+                        <div>
+                            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Description</h4>
+                            <div className="mt-1 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 min-h-[80px] whitespace-pre-wrap">
+                                {packageToView.description || 'No description provided.'}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end border-t pt-4">
+                            <Button variant="outline" onClick={() => setPackageToView(null)}>Close</Button>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </>
     );

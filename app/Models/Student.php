@@ -15,6 +15,7 @@ class Student extends Model
         'lead_id',
         'nis',
         'status',
+        'profile_picture',
     ];
 
     // Relasi ke data prospek / profil awal siswa

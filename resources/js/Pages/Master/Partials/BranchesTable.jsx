@@ -66,7 +66,7 @@ export default function BranchesTable({ branches }) {
     };
 
     const columns = [
-        { header: "ID", accessor: "id" },
+
         { header: "Name", accessor: "name" },
         { header: "Phone", accessor: "phone" },
         { header: "Address", accessor: "address" },

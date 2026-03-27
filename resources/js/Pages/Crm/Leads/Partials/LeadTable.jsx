@@ -102,9 +102,18 @@ export default function LeadTable({
             header: "Name",
             accessor: "name",
             render: (row) => (
-                <div>
-                    <p className="font-medium text-gray-900">{row.name}</p>
-                    <p className="text-xs text-gray-500">{row.email || "-"}</p>
+                <div className="flex items-center gap-2">
+                    <div>
+                        <p className="font-medium text-gray-900 flex items-center gap-1.5">
+                            {row.name}
+                            {row.is_profile_pending && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800" title="Ada pembaruan profil tertunda">
+                                    Update
+                                </span>
+                            )}
+                        </p>
+                        <p className="text-xs text-gray-500">{row.email || "-"}</p>
+                    </div>
                 </div>
             ),
         },

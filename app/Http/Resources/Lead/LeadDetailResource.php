@@ -26,6 +26,13 @@ class LeadDetailResource extends JsonResource
             'parent_name' => $this->parent_name,
             'parent_phone' => $this->parent_phone,
             'temperature' => $this->temperature,
+            'is_profile_pending' => $this->is_profile_pending,
+            'pending_profile_data' => $this->pending_profile_data,
+            'profile_update_url' => \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'public.lead.update', 
+                now()->addDay(), 
+                ['lead' => $this->id]
+            ),
             'created_at' => $this->created_at->format('d M Y, H:i'),
             'branch' => $this->whenLoaded('branch', fn() => $this->branch->name),
             'interest_package' => $this->whenLoaded('interestPackage', fn() => $this->interestPackage?->name),

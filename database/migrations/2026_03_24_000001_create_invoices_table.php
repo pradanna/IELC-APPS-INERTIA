@@ -9,11 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('invoices', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignId('lead_id')->constrained('leads')->cascadeOnDelete();
             $table->string('invoice_number')->unique();
             $table->decimal('total_amount', 12, 2)->default(0);
-            $table->enum('status', ['unpaid', 'partial', 'waiting_verification', 'paid', 'canceled'])->default('unpaid');
+            // status enum: 'unpaid', 'partial', 'waiting_verification', 'paid', 'canceled'
+            $table->string('status')->default('unpaid');
             $table->date('due_date')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();

@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('branch_teacher', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
-            $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
+            $table->foreignUuid('branch_id')->constrained('branches')->onDelete('cascade');
+            $table->foreignUuid('teacher_id')->constrained('teachers')->onDelete('cascade');
             $table->boolean('is_primary')->default(false);
             $table->timestamps();
         });

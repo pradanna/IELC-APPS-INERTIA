@@ -12,11 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('packages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('level_id')->constrained('levels')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('level_id')->constrained('levels')->onDelete('cascade');
             $table->string('name');
-            $table->enum('type', ['group', 'private', 'semi-private'])->default('group');
+            $table->text('description')->nullable();
+            // type enum: 'group', 'private', 'semi-private'
+            $table->string('type')->default('group');
             $table->integer('sessions_count');
+            $table->integer('duration_days')->default(84); // 12 Weeks default as requested
             $table->decimal('price', 15, 2);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

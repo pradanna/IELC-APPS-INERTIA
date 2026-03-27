@@ -63,7 +63,7 @@ export default function LevelsTable({ levels }) {
     };
 
     const columns = [
-        { header: "ID", accessor: "id" },
+
         { header: "Name", accessor: "name" },
         { header: "Description", accessor: "description" },
         { header: "Created At", accessor: "created_at" },

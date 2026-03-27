@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('invoice_id')->constrained('invoices')->cascadeOnDelete();
             $table->decimal('amount_paid', 12, 2)->default(0);
             $table->string('payment_method')->nullable();
             $table->timestamp('payment_date')->useCurrent();

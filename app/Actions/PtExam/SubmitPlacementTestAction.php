@@ -10,53 +10,43 @@ class SubmitPlacementTestAction
 {
     public function execute(PtSession $session, array $submittedAnswers): void
     {
-        $totalScore = 0;
-        $answersData = [];
-
-        // Kumpulkan semua soal (mandiri & grup) beserta opsinya untuk dicocokkan
-        $allQuestions = collect();
-        foreach ($session->ptExam->questions as $q) {
-            $allQuestions->push($q);
-        }
-        foreach ($session->ptExam->ptQuestionGroups as $group) {
-            foreach ($group->questions as $q) {
-                $allQuestions->push($q);
+        DB::transaction(function () use ($session, $submittedAnswers) {
+            $totalScore = 0;
+            $exam = $session->ptExam;
+            
+            // Map questions for efficient lookup (eager loaded in controller)
+            $allQuestions = collect();
+            foreach ($exam->questions as $q) $allQuestions->push($q);
+            foreach ($exam->ptQuestionGroups as $group) {
+                foreach ($group->questions as $q) $allQuestions->push($q);
             }
-        }
+            $questionMap = $allQuestions->keyBy('id');
 
-        $questionMap = $allQuestions->keyBy('id');
+            foreach ($submittedAnswers as $questionId => $optionId) {
+                $question = $questionMap->get($questionId);
+                if (!$question) continue;
 
-        foreach ($submittedAnswers as $questionId => $optionId) {
-            $question = $questionMap->get($questionId);
-            if (!$question) continue;
+                $selectedOption = $question->options->firstWhere('id', $optionId);
+                $isCorrect = $selectedOption && $selectedOption->is_correct;
 
-            $selectedOption = $question->options->firstWhere('id', $optionId);
-            $isCorrect = $selectedOption && $selectedOption->is_correct;
+                if ($isCorrect) {
+                    $totalScore += $question->points;
+                }
 
-            if ($isCorrect) {
-                $totalScore += $question->points;
-            }
-
-            $answersData[] = [
-                'pt_session_id' => $session->id,
-                'pt_question_id' => $questionId,
-                'pt_question_option_id' => $optionId,
-                'is_correct' => $isCorrect,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-
-        DB::transaction(function () use ($session, $answersData, $totalScore) {
-            if (!empty($answersData)) {
-                PtAnswer::insert($answersData);
+                // Use Eloquent Create instead of bulk DB insert
+                PtAnswer::create([
+                    'pt_session_id' => $session->id,
+                    'pt_question_id' => $questionId,
+                    'pt_question_option_id' => $optionId,
+                    'is_correct' => $isCorrect,
+                ]);
             }
 
-            $session->update([
-                'status' => 'completed',
-                'finished_at' => now(),
-                'final_score' => $totalScore,
-            ]);
+            // Update session using Eloquent
+            $session->status = 'completed';
+            $session->finished_at = now();
+            $session->final_score = $totalScore;
+            $session->save();
         });
     }
 }

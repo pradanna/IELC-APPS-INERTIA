@@ -31,6 +31,12 @@ import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import TextInput from "@/Components/form/TextInput";
 
+import CreateLeadModal from "./Modals/CreateLeadModal";
+import EditLeadModal from "./Modals/EditLeadModal";
+import DeleteLeadModal from "./Modals/DeleteLeadModal";
+import FollowupLeadModal from "./Modals/FollowupLeadModal";
+import PtScheduleModal from "./Modals/PtScheduleModal";
+
 export default function Index({
     auth,
     filters,
@@ -58,56 +64,10 @@ export default function Index({
     const [statusFilter, setStatusFilter] = useState("all");
     const [dynamicPtExams, setDynamicPtExams] = useState(ptExams || []);
 
-    const { put, processing } = useForm(); // Untuk status update inline
-    const deleteForm = useForm();
+    const { processing } = useForm(); // Untuk status update inline
 
     const [isPtModalOpen, setIsPtModalOpen] = useState(false);
     const [pendingPtUpdate, setPendingPtUpdate] = useState(null);
-    const ptForm = useForm({
-        pt_exam_id: "",
-        scheduled_at: "",
-        interest_package_id: "",
-    });
-
-    const createForm = useForm({
-        name: "",
-        phone: "",
-        email: "",
-        dob: "",
-        address: "",
-        parent_name: "",
-        parent_phone: "",
-        branch_id: "",
-        lead_source_id: "",
-        interest_level_id: "",
-        interest_package_id: "",
-        temperature: "warm",
-        notes: "",
-    });
-
-    const editForm = useForm({
-        name: "",
-        phone: "",
-        email: "",
-        dob: "",
-        address: "",
-        parent_name: "",
-        parent_phone: "",
-        branch_id: "",
-        lead_source_id: "",
-        interest_level_id: "",
-        interest_package_id: "",
-        temperature: "warm",
-        notes: "",
-    });
-
-    const followupForm = useForm({
-        method: "whatsapp",
-        scheduled_at: "",
-        notes: "",
-        lead_status_id: "",
-        pt_exam_id: "",
-    });
 
     // Transformasi data untuk memetakan `lead_status_id` menjadi `status` (string)
     // agar kompatibel dengan seluruh komponen UI yang masih membaca field .status
@@ -124,99 +84,19 @@ export default function Index({
         });
     }, [leads, leadStatuses]);
 
-    const handleCreateSubmit = (e) => {
-        e.preventDefault();
-        createForm.post(route("admin.crm.leads.store"), {
-            onSuccess: (page) => {
-                createForm.reset();
-                setIsCreateOpen(false);
-
-                // Otomatis buka side panel detail menggunakan lead terbaru di list
-                const newLead = page.props.leads[0];
-                if (newLead) {
-                    handleShowLeadDetail(newLead.id);
-                }
-            },
-        });
-    };
-
-    const handleEditSubmit = (e) => {
-        e.preventDefault();
-        // Asumsikan route 'admin.crm.leads.update' sudah ada
-        editForm.put(route("admin.crm.leads.update", leadToEdit.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setLeadToEdit(null);
-                editForm.reset();
-                if (selectedLead?.id === leadToEdit.id) {
-                    handleShowLeadDetail(leadToEdit.id);
-                }
-            },
-        });
-    };
-
     const handleDeleteClick = (lead) => {
         setLeadToDelete(lead);
     };
 
-    const handleDeleteSubmit = () => {
-        deleteForm.delete(route("admin.crm.leads.destroy", leadToDelete.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setLeadToDelete(null);
-                if (selectedLead?.id === leadToDelete.id) {
-                    setSelectedLead(null);
-                }
-            },
-        });
-    };
-
     const handleFollowupClick = (lead) => {
-        followupForm.reset();
-
-        const defaultDate = new Date();
-        defaultDate.setDate(defaultDate.getDate() + 3);
-        defaultDate.setHours(10, 0, 0, 0);
-        const offset = defaultDate.getTimezoneOffset() * 60000;
-        const localISOTime = new Date(defaultDate.getTime() - offset)
-            .toISOString()
-            .slice(0, 16);
-
-        followupForm.setData({
-            method: "whatsapp",
-            scheduled_at: localISOTime,
-            notes: "",
-            lead_status_id: lead.lead_status_id || "",
-            pt_exam_id: "",
-            interest_package_id: lead.interest_package_id || "",
-        });
         setLeadToFollowup(lead);
     };
 
-    const handleFollowupSubmit = (e) => {
-        e.preventDefault();
-        followupForm.post(
-            route("admin.crm.leads.followups.store", leadToFollowup.id),
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setLeadToFollowup(null);
-                    followupForm.reset();
-                },
-            },
-        );
-    };
-
     const handleStatusUpdate = (leadId, newStatus) => {
-        // Jika status Placement Test (4) dipilih, tahan update & buka modal PT Schedule
-        if (Number(newStatus) === 4) {
+        // Jika status Placement Test dipilih, tahan update & buka modal PT Schedule
+        if (newStatus === "c0a80101-0000-0000-0000-000000000004") {
             const leadInfo = mappedLeads.find((l) => l.id === leadId);
-            ptForm.setData({
-                pt_exam_id: "",
-                scheduled_at: "",
-                interest_package_id: leadInfo?.interest_package_id || "",
-            });
-            setPendingPtUpdate({ leadId, newStatus });
+            setPendingPtUpdate({ leadId, newStatus, interest_package_id: leadInfo?.interest_package_id || "" });
             setIsPtModalOpen(true);
             return;
         }
@@ -234,7 +114,7 @@ export default function Index({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: (page) => {
-                    // Toast akan otomatis muncul merespon page.props.flash dari server
+                    // Toast otomatis merespon flash
                 },
                 onError: (errors) => {
                     console.error("Inertia error triggered!", errors);
@@ -242,34 +122,17 @@ export default function Index({
                 onFinish: () => {
                     setIsPtModalOpen(false);
                     setPendingPtUpdate(null);
-                    ptForm.reset();
                 },
             },
         );
     };
 
-    const handlePtSubmit = (e) => {
-        e.preventDefault();
-        if (pendingPtUpdate) {
-            executeStatusUpdate(
-                pendingPtUpdate.leadId,
-                pendingPtUpdate.newStatus,
-                {
-                    pt_exam_id: ptForm.data.pt_exam_id,
-                    scheduled_at: ptForm.data.scheduled_at,
-                    interest_package_id: ptForm.data.interest_package_id,
-                },
-            );
-        }
-    };
-
     // Ambil data Active PT Exams dari server jika belum ada saat status Placement Test dipilih
     useEffect(() => {
         if (
-            (Number(followupForm.data.lead_status_id) === 4 || isPtModalOpen) &&
+            (isPtModalOpen || !!leadToFollowup) &&
             dynamicPtExams.length === 0
         ) {
-            // Melakukan request ke endpoint yang telah kita siapkan di controller
             axios
                 .get(route("admin.placement-tests.active"))
                 .then((response) => {
@@ -280,10 +143,24 @@ export default function Index({
                 });
         }
     }, [
-        followupForm.data.lead_status_id,
         isPtModalOpen,
+        leadToFollowup,
         dynamicPtExams.length,
     ]);
+
+    const handleReviewProfile = (leadId, actionType) => {
+        router.post(route('admin.crm.leads.review-profile', { lead: leadId }), {
+            action: actionType
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                axios
+                    .get(route("admin.crm.leads.show", { lead: leadId }))
+                    .then((response) => setSelectedLead(response.data.data));
+            }
+        });
+    };
 
     // Debounce untuk filter data utama di tabel & kanban
     const handleSearch = useCallback((query) => {
@@ -375,23 +252,7 @@ export default function Index({
         axios
             .get(route("admin.crm.leads.show", { lead: leadId }))
             .then((response) => {
-                const leadData = response.data.data;
-                editForm.setData({
-                    name: leadData.name || "",
-                    phone: leadData.phone || "",
-                    email: leadData.email || "",
-                    dob: leadData.dob || "",
-                    address: leadData.address || "",
-                    parent_name: leadData.parent_name || "",
-                    parent_phone: leadData.parent_phone || "",
-                    branch_id: leadData.branch_id || "",
-                    lead_source_id: leadData.lead_source_id || "",
-                    interest_level_id: leadData.interest_level_id || "",
-                    interest_package_id: leadData.interest_package_id || "",
-                    temperature: leadData.temperature || "warm",
-                    notes: leadData.notes || "",
-                });
-                setLeadToEdit(leadData);
+                setLeadToEdit(response.data.data);
             });
     };
 
@@ -399,13 +260,6 @@ export default function Index({
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "table", label: "List View", icon: TableIcon },
         { id: "kanban", label: "Kanban Board", icon: KanbanSquare },
-    ];
-
-    const followupTemplates = [
-        "Tidak diangkat",
-        "Nomor tidak aktif",
-        "Minta pricelist",
-        "Minta jadwal trial",
     ];
 
     // Custom styling agar React-Select menyatu mulus dengan UI Tailwind Anda
@@ -604,1250 +458,72 @@ export default function Index({
                 onStatusUpdate={handleStatusUpdate}
                 onFollowupClick={handleFollowupClick}
                 onEditClick={handleEditClick}
+                onReviewProfile={handleReviewProfile}
             />
 
             {/* Create Lead Modal */}
-            <Modal
+            <CreateLeadModal
                 show={isCreateOpen}
                 onClose={() => setIsCreateOpen(false)}
-                title="Add New Lead"
-                maxWidth="4xl"
-            >
-                <form onSubmit={handleCreateSubmit} className="space-y-6">
-                    {/* Section: Personal Info */}
-                    <div className="border-b border-gray-200 pb-2">
-                        <h3 className="text-sm font-semibold leading-6 text-gray-900">
-                            Personal Information
-                        </h3>
-                    </div>
+                onSuccess={(newId) => {
+                    setIsCreateOpen(false);
+                    if (newId) handleShowLeadDetail(newId);
+                }}
+                branches={branches}
+                leadSources={leadSources}
+                levels={levels}
+                packages={packages}
+            />
 
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-                        {/* Name (Required) */}
-                        <div>
-                            <InputLabel htmlFor="name">
-                                Name <span className="text-red-500">*</span>
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="name"
-                                    value={createForm.data.name}
-                                    onChange={(e) =>
-                                        createForm.setData(
-                                            "name",
-                                            toTitleCase(e.target.value),
-                                        )
-                                    }
-                                    isFocused={true}
-                                />
-                                {createForm.errors.name && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                        {createForm.errors.name}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Phone (Required) */}
-                        <div>
-                            <InputLabel htmlFor="phone">
-                                Phone <span className="text-red-500">*</span>
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="phone"
-                                    value={createForm.data.phone}
-                                    onChange={(e) =>
-                                        createForm.setData(
-                                            "phone",
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                                {createForm.errors.phone && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                        {createForm.errors.phone}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Email */}
-                        <div>
-                            <InputLabel htmlFor="email">Email</InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="email"
-                                    type="email"
-                                    value={createForm.data.email}
-                                    onChange={(e) =>
-                                        createForm.setData(
-                                            "email",
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
-                        </div>
-
-                        {/* Date of Birth */}
-                        <div>
-                            <InputLabel htmlFor="dob">Date of Birth</InputLabel>
-                            <ReactDatePicker
-                                id="edit_dob"
-                                selected={
-                                    createForm.data.dob
-                                        ? new Date(createForm.data.dob)
-                                        : null
-                                }
-                                onChange={(date) => {
-                                    const formattedDate = date
-                                        ? new Date(
-                                              date.getTime() -
-                                                  date.getTimezoneOffset() *
-                                                      60000,
-                                          )
-                                              .toISOString()
-                                              .split("T")[0]
-                                        : null;
-                                    createForm.setData("dob", formattedDate);
-                                }}
-                                dateFormat="dd/MM/yyyy"
-                                className="mt-1 block w-full rounded-lg border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-                                // 👇 TAMBAHKAN 3 BARIS INI 👇
-                                showYearDropdown
-                                showMonthDropdown
-                                dropdownMode="select" // Mengubahnya jadi dropdown HTML standar yang gampang di-klik
-                            />
-                        </div>
-
-                        {/* Parent Name */}
-                        <div>
-                            <InputLabel htmlFor="parent_name">
-                                Parent's Name
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="parent_name"
-                                    value={createForm.data.parent_name}
-                                    onChange={(e) =>
-                                        createForm.setData(
-                                            "parent_name",
-                                            toTitleCase(e.target.value),
-                                        )
-                                    }
-                                />
-                            </div>
-                        </div>
-
-                        {/* Parent Phone */}
-                        <div>
-                            <InputLabel htmlFor="parent_phone">
-                                Parent's Phone
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="parent_phone"
-                                    value={createForm.data.parent_phone}
-                                    onChange={(e) =>
-                                        createForm.setData(
-                                            "parent_phone",
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                                {createForm.errors.parent_phone && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                        {createForm.errors.parent_phone}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Address (Full Width) */}
-                    <div>
-                        <InputLabel htmlFor="address">Address</InputLabel>
-                        <div className="mt-1">
-                            <TextArea
-                                id="address"
-                                rows={2}
-                                value={createForm.data.address}
-                                onChange={(e) =>
-                                    createForm.setData(
-                                        "address",
-                                        e.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                    </div>
-
-                    {/* Section: Interest Info */}
-                    <div className="border-b border-gray-200 pb-2 mt-2">
-                        <h3 className="text-sm font-semibold leading-6 text-gray-900">
-                            Lead Details
-                        </h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-                        {/* Branch (Required) */}
-                        <div>
-                            <InputLabel htmlFor="branch_id">
-                                Branch <span className="text-red-500">*</span>
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="branch_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={branches.map((b) => ({
-                                        value: b.id,
-                                        label: b.name,
-                                    }))}
-                                    value={
-                                        branches
-                                            .map((b) => ({
-                                                value: b.id,
-                                                label: b.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    createForm.data.branch_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        createForm.setData(
-                                            "branch_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="Select Branch"
-                                    isClearable
-                                    className="w-full"
-                                />
-                                {createForm.errors.branch_id && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                        {createForm.errors.branch_id}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Lead Source */}
-                        <div>
-                            <InputLabel htmlFor="lead_source_id">
-                                Lead Source
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="lead_source_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={leadSources.map((s) => ({
-                                        value: s.id,
-                                        label: s.name,
-                                    }))}
-                                    value={
-                                        leadSources
-                                            .map((s) => ({
-                                                value: s.id,
-                                                label: s.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    createForm.data
-                                                        .lead_source_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        createForm.setData(
-                                            "lead_source_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="Select Source"
-                                    isClearable
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Interested Level */}
-                        <div>
-                            <InputLabel htmlFor="interest_level_id">
-                                Interested Level
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="interest_level_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={levels.map((l) => ({
-                                        value: l.id,
-                                        label: l.name,
-                                    }))}
-                                    value={
-                                        levels
-                                            .map((l) => ({
-                                                value: l.id,
-                                                label: l.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    createForm.data
-                                                        .interest_level_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        createForm.setData(
-                                            "interest_level_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="Select Level"
-                                    isClearable
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Interested Package */}
-                        <div>
-                            <InputLabel htmlFor="interest_package_id">
-                                Interested Package
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="interest_package_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={packages.map((p) => ({
-                                        value: p.id,
-                                        label: p.name,
-                                    }))}
-                                    value={
-                                        packages
-                                            .map((p) => ({
-                                                value: p.id,
-                                                label: p.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    createForm.data
-                                                        .interest_package_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        createForm.setData(
-                                            "interest_package_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="Select Package"
-                                    isClearable
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Temperature */}
-                        <div>
-                            <InputLabel htmlFor="temperature">
-                                Temperature
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="temperature"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={[
-                                        { value: "cold", label: "Cold" },
-                                        { value: "warm", label: "Warm" },
-                                        { value: "hot", label: "Hot" },
-                                    ]}
-                                    value={
-                                        [
-                                            { value: "cold", label: "Cold" },
-                                            { value: "warm", label: "Warm" },
-                                            { value: "hot", label: "Hot" },
-                                        ].find(
-                                            (opt) =>
-                                                opt.value ===
-                                                createForm.data.temperature,
-                                        ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        createForm.setData(
-                                            "temperature",
-                                            opt ? opt.value : "warm",
-                                        )
-                                    }
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Notes */}
-                    <div>
-                        <InputLabel htmlFor="notes">Notes</InputLabel>
-                        <div className="mt-1">
-                            <TextArea
-                                id="notes"
-                                rows={3}
-                                value={createForm.data.notes}
-                                onChange={(e) =>
-                                    createForm.setData("notes", e.target.value)
-                                }
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                        <button
-                            type="submit"
-                            disabled={createForm.processing}
-                            className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50"
-                        >
-                            {createForm.processing ? "Saving..." : "Save Lead"}
-                        </button>
-                        <button
-                            type="button"
-                            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
-                            onClick={() => setIsCreateOpen(false)}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </Modal>
-
-            {/* Edit Lead Modal */}
-            <Modal
+            <EditLeadModal
                 show={!!leadToEdit}
                 onClose={() => setLeadToEdit(null)}
-                title="Edit Lead"
-                maxWidth="4xl"
-            >
-                <form onSubmit={handleEditSubmit} className="space-y-6">
-                    {/* Section: Personal Info */}
-                    <div className="border-b border-gray-200 pb-2">
-                        <h3 className="text-sm font-semibold leading-6 text-gray-900">
-                            Personal Information
-                        </h3>
-                    </div>
+                onSuccess={() => {
+                    if (selectedLead?.id === leadToEdit?.id) {
+                        handleShowLeadDetail(leadToEdit.id);
+                    }
+                    setLeadToEdit(null);
+                }}
+                leadToEdit={leadToEdit}
+                branches={branches}
+                leadSources={leadSources}
+                levels={levels}
+                packages={packages}
+            />
 
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-                        {/* Name (Required) */}
-                        <div>
-                            <InputLabel htmlFor="edit_name">
-                                Name <span className="text-red-500">*</span>
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="edit_name"
-                                    value={editForm.data.name}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            "name",
-                                            toTitleCase(e.target.value),
-                                        )
-                                    }
-                                    isFocused={true}
-                                />
-                                {editForm.errors.name && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                        {editForm.errors.name}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Phone (Required) */}
-                        <div>
-                            <InputLabel htmlFor="edit_phone">
-                                Phone <span className="text-red-500">*</span>
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="edit_phone"
-                                    value={editForm.data.phone}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            "phone",
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                                {editForm.errors.phone && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                        {editForm.errors.phone}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Email */}
-                        <div>
-                            <InputLabel htmlFor="edit_email">Email</InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="edit_email"
-                                    type="email"
-                                    value={editForm.data.email}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            "email",
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
-                        </div>
-
-                        {/* Date of Birth */}
-                        <div>
-                            <InputLabel htmlFor="edit_dob">
-                                Date of Birth
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="edit_dob"
-                                    type="date"
-                                    value={editForm.data.dob}
-                                    onChange={(e) =>
-                                        editForm.setData("dob", e.target.value)
-                                    }
-                                />
-                            </div>
-                        </div>
-
-                        {/* Parent Name */}
-                        <div>
-                            <InputLabel htmlFor="edit_parent_name">
-                                Parent's Name
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="edit_parent_name"
-                                    value={editForm.data.parent_name}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            "parent_name",
-                                            toTitleCase(e.target.value),
-                                        )
-                                    }
-                                />
-                            </div>
-                        </div>
-
-                        {/* Parent Phone */}
-                        <div>
-                            <InputLabel htmlFor="edit_parent_phone">
-                                Parent's Phone
-                            </InputLabel>
-                            <div className="mt-1">
-                                <TextInput
-                                    id="edit_parent_phone"
-                                    value={editForm.data.parent_phone}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            "parent_phone",
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Address (Full Width) */}
-                    <div>
-                        <InputLabel htmlFor="edit_address">Address</InputLabel>
-                        <div className="mt-1">
-                            <TextArea
-                                id="edit_address"
-                                rows={2}
-                                value={editForm.data.address}
-                                onChange={(e) =>
-                                    editForm.setData("address", e.target.value)
-                                }
-                            />
-                        </div>
-                    </div>
-
-                    {/* Section: Interest Info */}
-                    <div className="border-b border-gray-200 pb-2 mt-2">
-                        <h3 className="text-sm font-semibold leading-6 text-gray-900">
-                            Lead Details
-                        </h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-                        {/* Branch (Required) */}
-                        <div>
-                            <InputLabel htmlFor="edit_branch_id">
-                                Branch <span className="text-red-500">*</span>
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="edit_branch_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={branches.map((b) => ({
-                                        value: b.id,
-                                        label: b.name,
-                                    }))}
-                                    value={
-                                        branches
-                                            .map((b) => ({
-                                                value: b.id,
-                                                label: b.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    editForm.data.branch_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        editForm.setData(
-                                            "branch_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="Select Branch"
-                                    isClearable
-                                    className="w-full"
-                                />
-                                {editForm.errors.branch_id && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                        {editForm.errors.branch_id}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Lead Source */}
-                        <div>
-                            <InputLabel htmlFor="edit_lead_source_id">
-                                Lead Source
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="edit_lead_source_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={leadSources.map((s) => ({
-                                        value: s.id,
-                                        label: s.name,
-                                    }))}
-                                    value={
-                                        leadSources
-                                            .map((s) => ({
-                                                value: s.id,
-                                                label: s.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    editForm.data
-                                                        .lead_source_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        editForm.setData(
-                                            "lead_source_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="Select Source"
-                                    isClearable
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Interested Level */}
-                        <div>
-                            <InputLabel htmlFor="edit_interest_level_id">
-                                Interested Level
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="edit_interest_level_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={levels.map((l) => ({
-                                        value: l.id,
-                                        label: l.name,
-                                    }))}
-                                    value={
-                                        levels
-                                            .map((l) => ({
-                                                value: l.id,
-                                                label: l.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    editForm.data
-                                                        .interest_level_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        editForm.setData(
-                                            "interest_level_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="Select Level"
-                                    isClearable
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Interested Package */}
-                        <div>
-                            <InputLabel htmlFor="edit_interest_package_id">
-                                Interested Package
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="edit_interest_package_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={packages.map((p) => ({
-                                        value: p.id,
-                                        label: p.name,
-                                    }))}
-                                    value={
-                                        packages
-                                            .map((p) => ({
-                                                value: p.id,
-                                                label: p.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    editForm.data
-                                                        .interest_package_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        editForm.setData(
-                                            "interest_package_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="Select Package"
-                                    isClearable
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Temperature */}
-                        <div>
-                            <InputLabel htmlFor="edit_temperature">
-                                Temperature
-                            </InputLabel>
-                            <div className="mt-1">
-                                <Select
-                                    id="edit_temperature"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={[
-                                        { value: "cold", label: "Cold" },
-                                        { value: "warm", label: "Warm" },
-                                        { value: "hot", label: "Hot" },
-                                    ]}
-                                    value={
-                                        [
-                                            { value: "cold", label: "Cold" },
-                                            { value: "warm", label: "Warm" },
-                                            { value: "hot", label: "Hot" },
-                                        ].find(
-                                            (opt) =>
-                                                opt.value ===
-                                                editForm.data.temperature,
-                                        ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        editForm.setData(
-                                            "temperature",
-                                            opt ? opt.value : "warm",
-                                        )
-                                    }
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Notes */}
-                    <div>
-                        <InputLabel htmlFor="edit_notes">Notes</InputLabel>
-                        <div className="mt-1">
-                            <TextArea
-                                id="edit_notes"
-                                rows={3}
-                                value={editForm.data.notes}
-                                onChange={(e) =>
-                                    editForm.setData("notes", e.target.value)
-                                }
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                        <button
-                            type="submit"
-                            disabled={editForm.processing}
-                            className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50"
-                        >
-                            {editForm.processing ? "Saving..." : "Save Changes"}
-                        </button>
-                        <button
-                            type="button"
-                            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
-                            onClick={() => setLeadToEdit(null)}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </Modal>
-
-            {/* Delete Lead Modal */}
-            <Modal
+            <DeleteLeadModal
                 show={!!leadToDelete}
                 onClose={() => setLeadToDelete(null)}
-                title="Delete Lead"
-            >
-                <div className="space-y-4">
-                    <p className="text-sm text-gray-500">
-                        Are you sure you want to delete{" "}
-                        <span className="font-bold text-gray-900">
-                            {leadToDelete?.name}
-                        </span>
-                        ? This action cannot be undone.
-                    </p>
-                    <div className="flex justify-end gap-3 mt-5 sm:mt-6">
-                        <button
-                            type="button"
-                            className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                            onClick={() => setLeadToDelete(null)}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            className="inline-flex justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:opacity-50"
-                            onClick={handleDeleteSubmit}
-                            disabled={deleteForm.processing}
-                        >
-                            {deleteForm.processing ? "Deleting..." : "Delete"}
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+                onSuccess={() => {
+                    if (selectedLead?.id === leadToDelete?.id) {
+                        setSelectedLead(null);
+                    }
+                    setLeadToDelete(null);
+                }}
+                leadToDelete={leadToDelete}
+            />
 
-            {/* Follow-up Lead Modal */}
-            <Modal
+            <FollowupLeadModal
                 show={!!leadToFollowup}
                 onClose={() => setLeadToFollowup(null)}
-                title={`Follow-up: ${leadToFollowup?.name}`}
-            >
-                <form onSubmit={handleFollowupSubmit} className="space-y-4">
-                    <div>
-                        <InputLabel
-                            htmlFor="followup_status"
-                            value="Update Status"
-                        />
-                        <div className="mt-1">
-                            <select
-                                id="followup_status"
-                                value={followupForm.data.lead_status_id}
-                                onChange={(e) =>
-                                    followupForm.setData(
-                                        "lead_status_id",
-                                        e.target.value,
-                                    )
-                                }
-                                className="block w-full rounded-lg border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-                            >
-                                {leadStatuses
-                                    .filter((status) => status.id !== 6)
-                                    .map((status) => (
-                                        <option
-                                            key={status.id}
-                                            value={status.id}
-                                        >
-                                            {status.name}
-                                        </option>
-                                    ))}
-                            </select>
-                        </div>
-                    </div>
+                onSuccess={() => setLeadToFollowup(null)}
+                leadToFollowup={leadToFollowup}
+                leadStatuses={leadStatuses}
+                packages={packages}
+                dynamicPtExams={dynamicPtExams}
+            />
 
-                    <div>
-                        <InputLabel
-                            htmlFor="followup_method"
-                            value="Follow-up Method"
-                        />
-                        <div className="mt-1">
-                            <select
-                                id="followup_method"
-                                value={followupForm.data.method}
-                                onChange={(e) =>
-                                    followupForm.setData(
-                                        "method",
-                                        e.target.value,
-                                    )
-                                }
-                                className="block w-full rounded-lg border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-                            >
-                                <option value="whatsapp">WhatsApp</option>
-                                <option value="call">Phone Call</option>
-                                <option value="email">Email</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {Number(followupForm.data.lead_status_id) !== 5 &&
-                        Number(followupForm.data.lead_status_id) !== 6 &&
-                        Number(followupForm.data.lead_status_id) !== 4 && (
-                            <div>
-                                <InputLabel
-                                    htmlFor="scheduled_at"
-                                    value="Next Schedule"
-                                />
-                                <div className="mt-1">
-                                    <TextInput
-                                        id="scheduled_at"
-                                        type="datetime-local"
-                                        value={followupForm.data.scheduled_at}
-                                        onChange={(e) =>
-                                            followupForm.setData(
-                                                "scheduled_at",
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="w-full"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                    {(Number(followupForm.data.lead_status_id) === 5 ||
-                        Number(followupForm.data.lead_status_id) === 4) && (
-                        <div>
-                            <InputLabel
-                                htmlFor="followup_interest_package_id"
-                                value="Paket yang Diminati"
-                            />
-                            <div className="mt-1">
-                                <Select
-                                    id="followup_interest_package_id"
-                                    styles={reactSelectStyles}
-                                    menuPosition="fixed"
-                                    options={packages.map((p) => ({
-                                        value: p.id,
-                                        label: p.name,
-                                    }))}
-                                    value={
-                                        packages
-                                            .map((p) => ({
-                                                value: p.id,
-                                                label: p.name,
-                                            }))
-                                            .find(
-                                                (opt) =>
-                                                    opt.value ===
-                                                    followupForm.data
-                                                        .interest_package_id,
-                                            ) || null
-                                    }
-                                    onChange={(opt) =>
-                                        followupForm.setData(
-                                            "interest_package_id",
-                                            opt ? opt.value : "",
-                                        )
-                                    }
-                                    placeholder="-- Pilih Paket Pendaftaran --"
-                                    isClearable
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {Number(followupForm.data.lead_status_id) === 4 && (
-                        <>
-                            <div>
-                                <InputLabel
-                                    htmlFor="pt_exam_id"
-                                    value="Pilih Paket Ujian"
-                                />
-                                <div className="mt-1">
-                                    <Select
-                                        id="pt_exam_id"
-                                        styles={reactSelectStyles}
-                                        menuPosition="fixed"
-                                        options={dynamicPtExams.map((exam) => ({
-                                            value: exam.id,
-                                            label: exam.title || exam.name,
-                                        }))}
-                                        value={
-                                            dynamicPtExams
-                                                .map((exam) => ({
-                                                    value: exam.id,
-                                                    label:
-                                                        exam.title || exam.name,
-                                                }))
-                                                .find(
-                                                    (opt) =>
-                                                        opt.value ===
-                                                        followupForm.data
-                                                            .pt_exam_id,
-                                                ) || null
-                                        }
-                                        onChange={(opt) =>
-                                            followupForm.setData(
-                                                "pt_exam_id",
-                                                opt ? opt.value : "",
-                                            )
-                                        }
-                                        placeholder="-- Pilih Paket --"
-                                        isClearable
-                                        className="w-full"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <InputLabel
-                                    htmlFor="scheduled_at"
-                                    value="PT Schedule"
-                                />
-                                <div className="mt-1">
-                                    <TextInput
-                                        id="scheduled_at"
-                                        type="datetime-local"
-                                        value={followupForm.data.scheduled_at}
-                                        onChange={(e) =>
-                                            followupForm.setData(
-                                                "scheduled_at",
-                                                e.target.value,
-                                            )
-                                        }
-                                        className="w-full"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    <div>
-                        <InputLabel htmlFor="followup_notes" value="Notes" />
-                        <div className="mt-2 mb-3 flex flex-wrap gap-2">
-                            {followupTemplates.map((template, idx) => (
-                                <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => {
-                                        const currentNotes =
-                                            followupForm.data.notes || "";
-                                        const newNotes = currentNotes.trim()
-                                            ? `${currentNotes.trim()}\n- ${template}`
-                                            : `- ${template}`;
-                                        followupForm.setData("notes", newNotes);
-                                    }}
-                                    className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 hover:bg-blue-100 transition-colors"
-                                >
-                                    + {template}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="mt-1">
-                            <TextArea
-                                id="followup_notes"
-                                rows={3}
-                                value={followupForm.data.notes}
-                                onChange={(e) =>
-                                    followupForm.setData(
-                                        "notes",
-                                        e.target.value,
-                                    )
-                                }
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                        <button
-                            type="submit"
-                            disabled={followupForm.processing}
-                            className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50"
-                        >
-                            {followupForm.processing
-                                ? "Saving..."
-                                : "Save Follow-up"}
-                        </button>
-                        <button
-                            type="button"
-                            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
-                            onClick={() => setLeadToFollowup(null)}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </Modal>
-
-            {/* Jadwalkan Placement Test Modal */}
-            <Modal
+            <PtScheduleModal
                 show={isPtModalOpen}
-                onClose={() => setIsPtModalOpen(false)}
-                title="Jadwalkan Placement Test"
-            >
-                <form onSubmit={handlePtSubmit} className="space-y-4">
-                    <div>
-                        <InputLabel
-                            htmlFor="pt_exam_id"
-                            value="Pilih Paket Ujian"
-                        />
-                        <div className="mt-1">
-                            <Select
-                                id="pt_exam_id"
-                                styles={reactSelectStyles}
-                                menuPosition="fixed"
-                                options={dynamicPtExams.map((exam) => ({
-                                    value: exam.id,
-                                    label: exam.title || exam.name,
-                                }))}
-                                value={
-                                    dynamicPtExams
-                                        .map((exam) => ({
-                                            value: exam.id,
-                                            label: exam.title || exam.name,
-                                        }))
-                                        .find(
-                                            (opt) =>
-                                                opt.value ===
-                                                ptForm.data.pt_exam_id,
-                                        ) || null
-                                }
-                                onChange={(opt) =>
-                                    ptForm.setData(
-                                        "pt_exam_id",
-                                        opt ? opt.value : "",
-                                    )
-                                }
-                                placeholder="-- Pilih Paket --"
-                                isClearable
-                                className="w-full"
-                            />
-                            {ptForm.errors.pt_exam_id && (
-                                <p className="mt-1 text-xs text-red-600">
-                                    {ptForm.errors.pt_exam_id}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div>
-                        <InputLabel
-                            htmlFor="pt_interest_package_id"
-                            value="Paket yang Diminati"
-                        />
-                        <div className="mt-1">
-                            <Select
-                                id="pt_interest_package_id"
-                                styles={reactSelectStyles}
-                                menuPosition="fixed"
-                                options={packages.map((p) => ({
-                                    value: p.id,
-                                    label: p.name,
-                                }))}
-                                value={
-                                    packages
-                                        .map((p) => ({
-                                            value: p.id,
-                                            label: p.name,
-                                        }))
-                                        .find(
-                                            (opt) =>
-                                                opt.value ===
-                                                ptForm.data.interest_package_id,
-                                        ) || null
-                                }
-                                onChange={(opt) =>
-                                    ptForm.setData(
-                                        "interest_package_id",
-                                        opt ? opt.value : "",
-                                    )
-                                }
-                                placeholder="-- Pilih Paket Pendaftaran --"
-                                isClearable
-                                className="w-full"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <InputLabel
-                            htmlFor="pt_scheduled_at"
-                            value="Jadwal Pelaksanaan"
-                        />
-                        <div className="mt-1">
-                            <TextInput
-                                id="pt_scheduled_at"
-                                type="datetime-local"
-                                value={ptForm.data.scheduled_at}
-                                onChange={(e) =>
-                                    ptForm.setData(
-                                        "scheduled_at",
-                                        e.target.value,
-                                    )
-                                }
-                                className="w-full"
-                                required
-                            />
-                            {ptForm.errors.scheduled_at && (
-                                <p className="mt-1 text-xs text-red-600">
-                                    {ptForm.errors.scheduled_at}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                        <button
-                            type="submit"
-                            disabled={ptForm.processing}
-                            className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2 disabled:opacity-50"
-                        >
-                            {ptForm.processing
-                                ? "Menyimpan..."
-                                : "Jadwalkan & Ubah Status"}
-                        </button>
-                        <button
-                            type="button"
-                            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
-                            onClick={() => setIsPtModalOpen(false)}
-                        >
-                            Batal
-                        </button>
-                    </div>
-                </form>
-            </Modal>
+                onClose={() => {
+                    setIsPtModalOpen(false);
+                    setPendingPtUpdate(null);
+                }}
+                pendingPtUpdate={pendingPtUpdate}
+                executeStatusUpdate={executeStatusUpdate}
+                packages={packages}
+                dynamicPtExams={dynamicPtExams}
+            />
         </AdminLayout>
     );
 }

@@ -9,6 +9,9 @@ use App\Http\Controllers\Master\MasterDataController;
 use App\Http\Controllers\Master\MasterLeadSourceController;
 use App\Http\Controllers\Master\MasterLevelController;
 use App\Http\Controllers\Master\MasterPackageController;
+use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\StudyClassController;
+use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Master\LeadStatusController as MasterLeadStatusController;
 use App\Http\Controllers\Master\MonthlyTargetController;
 use App\Http\Controllers\PtExam\PtExamController;
@@ -16,6 +19,7 @@ use App\Http\Controllers\PtExam\PtQuestionGroupController;
 use App\Http\Controllers\PtExam\PtQuestionController;
 use App\Models\PtExam;
 use App\Http\Controllers\Public\PlacementTestController;
+use App\Http\Controllers\Public\PublicLeadProfileController;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Finance\FinanceDashboardController;
@@ -46,6 +50,10 @@ Route::post('/placement-test/{slug}/{token}/submit', [PlacementTestController::c
 Route::get('/placement-test/{slug}/{token}/result', [PlacementTestController::class, 'result'])->name('public.placement-test.result');
 Route::get('/placement-test/{slug}/{token}/review', [PlacementTestController::class, 'review'])->name('public.placement-test.review');
 
+// Public Lead Profile Form (Magic Link)
+Route::get('/lead/update/{lead}', [PublicLeadProfileController::class, 'edit'])->name('public.lead.update')->middleware('signed');
+Route::post('/lead/update/{lead}', [PublicLeadProfileController::class, 'update'])->name('public.lead.update.submit')->middleware('signed');
+
 // 3. Profile Routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -71,6 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/crm/leads/{lead}', [LeadController::class, 'destroy'])->name('crm.leads.destroy');
         Route::put('/crm/leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('crm.leads.status.update');
         Route::post('/crm/leads/{lead}/followups', [LeadController::class, 'storeFollowup'])->name('crm.leads.followups.store');
+        Route::post('/crm/leads/{lead}/review-profile', [LeadController::class, 'reviewProfileUpdate'])->name('crm.leads.review-profile');
 
         Route::get('/placement-tests', [PtExamController::class, 'index'])->name('placement-tests.index');
         Route::get('/placement-tests/active', [PtExamController::class, 'getActiveExams'])->name('placement-tests.active');
@@ -110,6 +119,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::resource('/master/lead-statuses', MasterLeadStatusController::class)->names('master.lead-statuses');
 
+        Route::get('/students', [StudentController::class, 'index'])->name('students.index');
+        Route::post('/students/{student}/assign-classes', [StudentController::class, 'assignClasses'])->name('students.assign-classes');
+        Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
+        
+        Route::resource('/teachers', TeacherController::class)->names('teachers');
+        
+        Route::resource('/study-classes', StudyClassController::class)->names('study-classes');
+        Route::post('/study-classes/{studyClass}/schedules', [StudyClassController::class, 'storeSchedule'])->name('study-classes.store-schedule');
+        Route::put('/study-classes/schedules/{schedule}', [StudyClassController::class, 'updateSchedule'])->name('study-classes.update-schedule');
 
 
 

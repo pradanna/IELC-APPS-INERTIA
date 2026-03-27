@@ -35,7 +35,7 @@ const DetailRow = ({ icon: Icon, label, value, action }) => {
     );
 };
 
-export default function DetailLead({ lead, onEditClick }) {
+export default function DetailLead({ lead, onEditClick, onReviewProfile }) {
     // Dapatkan notes terbaru: prioritas dari follow-up terakhir yang memiliki notes, jika tidak ada fallback ke notes awal
     const displayNote = (() => {
         const followups = lead?.followups || [];
@@ -51,16 +51,81 @@ export default function DetailLead({ lead, onEditClick }) {
 
     return (
         <>
-            {/* Edit Action */}
-            <div className="flex justify-end">
-                <button
-                    type="button"
-                    onClick={() => onEditClick && onEditClick(lead?.id)}
-                    className="inline-flex items-center gap-x-1.5 rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
-                >
-                    <Pencil className="-ml-0.5 h-4 w-4 text-gray-400" />
-                    Edit Detail
-                </button>
+            {/* Pending Profile Review Banner */}
+            {lead?.is_profile_pending && lead?.pending_profile_data && (
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 mb-6 shadow-sm">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-1.5">
+                                <Info className="w-4 h-4" />
+                                Pembaruan Profil Mandiri
+                            </h3>
+                            <p className="text-xs text-amber-700 mt-1">
+                                Lead telah melengkapi data secara mandiri. Periksa dan setujui perubahan berikut:
+                            </p>
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm bg-white p-3 rounded-lg border border-amber-100">
+                                {Object.entries(lead.pending_profile_data).map(([key, val]) => {
+                                    if (!val) return null;
+                                    const labels = {
+                                        name: 'Nama', dob: 'Tanggal Lahir', phone: 'No. HP',
+                                        email: 'Email', address: 'Alamat', parent_name: 'Nama Wali',
+                                        parent_phone: 'No. HP Wali'
+                                    };
+                                    return (
+                                        <div key={key} className="flex flex-col">
+                                            <span className="text-xs text-gray-500">{labels[key] || key}</span>
+                                            <span className="font-medium text-gray-800">{String(val)}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => onReviewProfile && onReviewProfile(lead.id, 'accept')}
+                            className="bg-primary-600 text-white hover:bg-primary-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Setujui Perubahan
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onReviewProfile && onReviewProfile(lead.id, 'reject')}
+                            className="bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Tolak
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Profile URL Section */}
+            <div className="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-200 mb-6">
+                <span className="text-xs text-gray-500 font-medium">Link Pembaruan Mandiri:</span>
+                {lead?.profile_update_url ? (
+                    <div className="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-md border border-gray-200">
+                        <input
+                            type="text"
+                            readOnly
+                            value={lead.profile_update_url}
+                            className="bg-transparent text-xs text-gray-600 border-none outline-none focus:ring-0 p-0 flex-1 cursor-text truncate"
+                            onClick={(e) => e.target.select()}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => {
+                                navigator.clipboard.writeText(lead.profile_update_url);
+                                alert("Link tersalin!");
+                            }}
+                            className="text-primary-600 hover:text-primary-700 text-xs font-semibold whitespace-nowrap"
+                        >
+                            Copy Link
+                        </button>
+                    </div>
+                ) : (
+                    <div className="text-xs text-gray-400 italic">Link otomatis kadaluarsa (24 Jam) atau telah diperbarui.</div>
+                )}
             </div>
 
             {/* Details Grid */}

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('frontdesks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
+            $table->foreignUuid('branch_id')->constrained('branches')->onDelete('cascade');
             $table->string('name');
             $table->string('phone')->nullable();
             $table->text('address')->nullable();

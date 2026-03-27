@@ -52,8 +52,13 @@ export default function LeadKanban({
                                     }
                                 >
                                     <div className="flex justify-between items-start mb-2">
-                                        <h4 className="text-sm font-medium text-gray-900 leading-tight">
+                                        <h4 className="text-sm font-medium text-gray-900 leading-tight flex items-center gap-1.5 flex-wrap">
                                             {lead.name}
+                                            {lead.is_profile_pending && (
+                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800" title="Ada pembaruan profil tertunda">
+                                                    Update
+                                                </span>
+                                            )}
                                         </h4>
                                         <Badge>
                                             {lead.source || "Unknown"}

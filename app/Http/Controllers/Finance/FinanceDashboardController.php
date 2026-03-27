@@ -26,8 +26,8 @@ class FinanceDashboardController extends Controller
         // 2. Hindari penggunaan ->get() untuk data modal jika jumlahnya ribuan. Ubah menjadi mekanisme Pagination atau Lazy Load (fetch via API terpisah saat modal diklik).
 
         // 1. KPI Metrics
-        // Asumsi lead_status_id = 5 adalah "Waiting for Payment" berdasarkan seeder
-        $pendingInvoicesQuery = Lead::with('interestPackage')->where('lead_status_id', 5)
+        // Asumsi UUID 'c0a80101-0000-0000-0000-000000000005' adalah "Waiting for Payment" berdasarkan seeder
+        $pendingInvoicesQuery = Lead::with('interestPackage')->where('lead_status_id', 'c0a80101-0000-0000-0000-000000000005')
             ->whereDoesntHave('invoices');
         $pendingInvoicesCount = $pendingInvoicesQuery->count();
         $pendingInvoicesLeads = $pendingInvoicesQuery->latest()->get();
@@ -74,6 +74,10 @@ class FinanceDashboardController extends Controller
             ->latest()
             ->get();
 
+        $allInvoices = Invoice::with(['lead', 'items'])
+            ->latest()
+            ->get();
+
         // 3. Analytics (Mocked/Aggregated Data)
         // Menghitung trend pendapatan bulan ini per hari
         $revenueTrend = Invoice::where('status', 'paid')
@@ -100,6 +104,7 @@ class FinanceDashboardController extends Controller
                 'unpaid_invoices' => $unpaidInvoices,
                 'pending_verifications_list' => $pendingVerificationsList,
                 'revenue_this_month_list' => $revenueThisMonthList,
+                'all_invoices' => $allInvoices,
             ],
             'charts' => [
                 'revenue_trend' => $revenueTrend,
@@ -123,8 +128,8 @@ class FinanceDashboardController extends Controller
         $invoice = null;
         DB::transaction(function () use ($validated, &$invoice) {
             // Generate Nomor Invoice: INV-YmdHis/urut
-            $latestInvoice = Invoice::latest('id')->first();
-            $nextId = $latestInvoice ? $latestInvoice->id + 1 : 1;
+            $invoiceCount = Invoice::whereDate('created_at', now())->count();
+            $nextId = $invoiceCount + 1;
             $invoiceNumber = 'INV-' . now()->format('YmdHis') . '/' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 
             $invoice = Invoice::create([
@@ -226,19 +231,46 @@ class FinanceDashboardController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $invoice) {
+            $prevStatus = $invoice->status;
+            
             $invoice->update([
                 'status' => $validated['status'],
                 'paid_at' => $validated['status'] === 'paid' ? now() : ($invoice->status === 'paid' ? null : $invoice->paid_at),
             ]);
 
             // Jika status diubah menjadi paid, catat data pembayaran ke tabel payments
-            if ($validated['status'] === 'paid') {
+            if ($validated['status'] === 'paid' && $prevStatus !== 'paid') {
                 Payment::create([
                     'invoice_id' => $invoice->id,
                     'amount_paid' => $invoice->total_amount,
                     'payment_method' => $validated['payment_method'] ?? 'cash',
                     'payment_date' => now(),
                 ]);
+
+                // Update Lead Status ke "Joined" (UUID: c0a80101-0000-0000-0000-000000000006)
+                $invoice->lead->update([
+                    'lead_status_id' => 'c0a80101-0000-0000-0000-000000000006'
+                ]);
+
+                // Create Data Siswa (jika belum ada)
+                if (!$invoice->lead->student) {
+                    // Generate NIS otomatis: S-Ymd-XXXX
+                    $datePart = now()->format('Ymd');
+                    $lastStudent = \App\Models\Student::where('nis', 'like', "S-$datePart-%")->latest()->first();
+                    $lastCount = 0;
+                    if ($lastStudent) {
+                        $parts = explode('-', $lastStudent->nis);
+                        $lastCount = (int)end($parts);
+                    }
+                    $newCount = str_pad($lastCount + 1, 4, '0', STR_PAD_LEFT);
+                    $nis = "S-$datePart-$newCount";
+
+                    \App\Models\Student::create([
+                        'lead_id' => $invoice->lead_id,
+                        'nis' => $nis,
+                        'status' => 'active',
+                    ]);
+                }
             }
         });
 

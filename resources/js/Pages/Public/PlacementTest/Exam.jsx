@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Head, useForm } from "@inertiajs/react";
 import { Clock, ChevronLeft, ChevronRight, Check } from "lucide-react";
 
@@ -10,9 +10,17 @@ export default function Exam({
     user_answers = {},
 }) {
     const [currentPageIndex, setCurrentPageIndex] = useState(0);
+    const mainRef = useRef(null);
     const [timeLeft, setTimeLeft] = useState(
         Math.floor(session.remaining_seconds || 0),
     );
+
+    // Scroll to top when page changes
+    useEffect(() => {
+        if (mainRef.current) {
+            mainRef.current.scrollTop = 0;
+        }
+    }, [currentPageIndex]);
 
     const storageKey = `pt_answers_${session.token}`;
     const initialAnswers =
@@ -212,7 +220,7 @@ export default function Exam({
                 </aside>
 
                 {/* Main Content Kanan */}
-                <main className="flex-1 overflow-y-auto bg-gray-50/50 relative">
+                <main ref={mainRef} className="flex-1 overflow-y-auto bg-gray-50/50 relative">
                     <div className="max-w-4xl mx-auto py-8 px-6 pb-32">
                         {/* Jika Soal berupa Grup (Wacana / Audio) */}
                         {activePage.type === "group" && (

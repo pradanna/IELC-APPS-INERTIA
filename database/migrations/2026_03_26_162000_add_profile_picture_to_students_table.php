@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pt_sessions', function (Blueprint $table) {
-            $table->dateTime('scheduled_at')->nullable()->after('token');
+        Schema::table('students', function (Blueprint $table) {
+            $table->string('profile_picture')->nullable()->after('status');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pt_sessions', function (Blueprint $table) {
-            //
+        Schema::table('students', function (Blueprint $table) {
+            $table->dropColumn('profile_picture');
         });
     }
 };
