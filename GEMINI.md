@@ -31,12 +31,22 @@ CORE_LOCATIONS: "Solo", "Semarang".
     - `resources/js/Components/`: Reusable UI elements (Buttons, Inputs).
     - `resources/js/Layouts/`: Layout wrappers.
     - Page-Specific Components: Extract complex UI into a `Partials` folder located exactly one level next to the main page file (e.g., if page is `Pages/Crm/Leads/Index.jsx`, partials go to `Pages/Crm/Leads/Partials/LeadTable.jsx`).
+    - Page-Specific Modals: Modals MUST be placed in its own `Modals` folder next to the main page file (e.g., `Pages/Crm/Leads/Modals/CreateLeadModal.jsx`).
     - CRITICAL: NEVER use wildcards for path generation. NEVER nest folders with the same name (e.g., /Superadmin/Superadmin/).
 2. STATE_MANAGEMENT:
     - Rely on Inertia's `useForm` for all mutations (POST, PUT, DELETE).
     - Use standard React Hooks (`useState`, `useEffect`) strictly for local UI state.
 
-3. COMPONENT-FIRST WORKFLOW (DRY PRINCIPLE): - When generating a new UI page, you MUST evaluate if the UI requires standard elements (e.g., Data Tables, Pagination, Modals, Status Badges). - If these reusable components do not exist yet, you MUST generate the code for them FIRST inside `resources/js/Components/` before writing the main Page file. - NEVER hardcode massive HTML structures (like raw `<table>` or repetitive `<form>` inputs) directly inside the main Page. Extract them to global `Components/` or page-specific `Partials/`.
+3. COMPONENT-FIRST WORKFLOW (DRY PRINCIPLE):
+    - When generating a new UI page, you MUST evaluate if the UI requires standard elements (e.g., Data Tables, Pagination, Modals, Status Badges).
+    - If these reusable components do not exist yet, you MUST generate the code for them FIRST inside `resources/js/Components/` before writing the main Page file.
+    - NEVER hardcode massive HTML structures (like raw `<table>` or repetitive `<form>` inputs) directly inside the main Page. Extract them to global `Components/` or page-specific `Partials/`.
+
+4. SEPARATION_OF_CONCERNS (HOOKS_FOR_LOGIC):
+    - JSX files MUST remain thin and focused on data presentation (declarative UI).
+    - ALL complex logic, modal state management, and event handlers MUST be extracted into custom hooks.
+    - Hooks should be located in a `Hooks` folder next to the page or component (e.g., `Pages/Crm/Leads/Hooks/useLeadModals.js`).
+    - This keeps components clean, testable, and reusable.
 
 # [UI_UX_STANDARDS: TAILWIND CSS v4 (HIGH-DENSITY & COMPACT)]
 

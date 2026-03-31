@@ -249,7 +249,8 @@ class FinanceDashboardController extends Controller
 
                 // Update Lead Status ke "Joined" (UUID: c0a80101-0000-0000-0000-000000000006)
                 $invoice->lead->update([
-                    'lead_status_id' => 'c0a80101-0000-0000-0000-000000000006'
+                    'lead_status_id' => 'c0a80101-0000-0000-0000-000000000006',
+                    'joined_at' => now(),
                 ]);
 
                 // Create Data Siswa (jika belum ada)

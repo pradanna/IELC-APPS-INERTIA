@@ -66,7 +66,10 @@ export default function StudyClassDetailSlider({ show, onClose, studyClass, room
                         <DetailTab studyClass={studyClass} />
                     )}
                     {activeTab === 'students' && (
-                        <StudentsTab students={studyClass.students} />
+                        <StudentsTab 
+                            students={studyClass.students} 
+                            studyClass={studyClass}
+                        />
                     )}
                     {activeTab === 'schedule' && (
                         <ScheduleTab 

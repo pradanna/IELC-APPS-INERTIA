@@ -25,7 +25,7 @@ class LeadFactory extends Factory
             'parent_name' => fake()->name('female'),
             'parent_phone' => fake()->phoneNumber(),
             'lead_source_id' => \App\Models\LeadSource::factory(),
-            'lead_status_id' => '0ca51d27-0466-41fa-9cd0-02e0b57e7fc0',
+            'lead_status_id' => 'c0a80101-0000-0000-0000-000000000001',
             'notes' => fake()->sentence(),
         ];
     }

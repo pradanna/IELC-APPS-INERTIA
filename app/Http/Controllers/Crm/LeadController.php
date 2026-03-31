@@ -7,6 +7,7 @@ use App\Actions\Crm\Lead\SearchLeadsAction;
 use App\Actions\Crm\Lead\StoreLeadAction;
 use App\Actions\Crm\Lead\UpdateLeadAction;
 use App\Actions\Crm\Lead\ExportLeadsAction;
+use App\Actions\Crm\Lead\DeleteLeadAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Crm\Lead\StoreLeadRequest;
 use App\Http\Requests\Crm\Lead\UpdateLeadStatusRequest;
@@ -27,10 +28,32 @@ class LeadController extends Controller
     {
         $user = $request->user();
         $query = Lead::query();
+        
+        $branchId = $request->input('branch_id');
+        $month = $request->input('month', now()->month);
+        $year = $request->input('year', now()->year);
+        $sourceId = $request->input('lead_source_id');
 
         // Multi-branch Isolation (Frontdesk only sees their branch leads)
         if ($user->role === 'frontdesk' && $user->frontdesk) {
-            $query->where('branch_id', $user->frontdesk->branch_id);
+            $branchId = $user->frontdesk->branch_id;
+        }
+
+        if ($branchId && $branchId !== 'all') {
+            $query->where('branch_id', $branchId);
+        }
+
+        if ($sourceId && $sourceId !== 'all') {
+            $query->where('lead_source_id', $sourceId);
+        }
+        
+        if ($request->filled('temperature') && $request->input('temperature') !== 'all') {
+            $query->where('temperature', $request->input('temperature'));
+        }
+
+        // Apply time-based filter only if NO search is happening
+        if (!$request->filled('search') && $month && $year) {
+            $query->whereMonth('created_at', $month)->whereYear('created_at', $year);
         }
 
         // Filter by search query
@@ -42,43 +65,81 @@ class LeadController extends Controller
             });
         }
 
-        $leads = $query->with(['interestLevel', 'interestPackage', 'activities.causer', 'followups.user'])
+        $leads = $query->with(['interestLevel', 'interestPackage', 'activities.causer', 'followups.user', 'leadSource', 'branch', 'leadStatus'])
             ->latest()
-            ->get()
-            ->map(function ($lead) {
-                // Generate URL that will expire in 24 hours
-                $lead->profile_update_url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-                    'public.lead.update', 
-                    now()->addDay(), 
-                    ['lead' => $lead->id]
-                );
-                return $lead;
+            ->get();
+
+        // Fetch status IDs dynamically with a search-first approach (more resilient than hardcoded UUIDs)
+        $allStatuses = \App\Models\LeadStatus::all();
+        $statusIds = $allStatuses->pluck('id', 'name')->mapWithKeys(fn($id, $name) => [strtolower($name) => $id]);
+        
+        // Find joined status by name (flexible check for 'Joined' or 'Enrolled')
+        $joinedStatus = $allStatuses->filter(fn($s) => in_array(strtolower($s->name), ['joined', 'enrolled', 'join']))->first();
+        $joinedStatusId = $joinedStatus ? $joinedStatus->id : 'c0a80101-0000-0000-0000-000000000006';
+
+
+        
+        Log::debug("CRM Stats: JoinedStatusId found as {$joinedStatusId} (Name: " . ($joinedStatus?->name ?? 'Default') . ")");
+
+        // Base query for counts (respects branch and source filters)
+        $countsQuery = Lead::query();
+        if ($branchId && $branchId !== 'all') $countsQuery->where('branch_id', $branchId);
+        if ($sourceId && $sourceId !== 'all') $countsQuery->where('lead_source_id', $sourceId);
+
+        // Fetch leads for the chart and table
+        // We need leads CREATED in this month OR JOINED in this month to satisfy all dashboard needs
+        $dashboardLeadsQuery = (clone $countsQuery)->where(function($q) use ($month, $year, $joinedStatusId) {
+            // Case 1: Any lead created this month
+            $q->whereMonth('created_at', $month)->whereYear('created_at', $year)
+            // Case 2: Any lead who has a joined_at date in this month (VERY IMPORTART: ignore status ID here to be safe)
+            ->orWhere(function($sq) use ($month, $year) {
+                $sq->whereMonth('joined_at', $month)
+                   ->whereYear('joined_at', $year);
+            })
+            // Case 3: Any lead in Joined status whose joined_at is null but created_at is this month
+            ->orWhere(function($sq) use ($month, $year, $joinedStatusId) {
+                $sq->where('lead_status_id', $joinedStatusId)
+                   ->whereNull('joined_at')
+                   ->whereMonth('created_at', $month)
+                   ->whereYear('created_at', $year);
             });
+        });
 
-        $baseStatsQuery = Lead::query();
-        $targetQuery = MonthlyTarget::where('month', now()->month)
-            ->where('year', now()->year);
+        $leads = $dashboardLeadsQuery->with(['interestLevel', 'interestPackage', 'activities.causer', 'followups.user', 'leadSource', 'branch', 'leadStatus'])
+            ->latest()
+            ->get();
 
-        // Scope stats by branch for frontdesk
-        if ($user->role === 'frontdesk' && $user->frontdesk) {
-            $baseStatsQuery->where('branch_id', $user->frontdesk->branch_id);
-            $targetQuery->where('branch_id', $user->frontdesk->branch_id);
-        }
+        // Calculate Stats using the dynamically found IDs if possible
+        $stats = [
+            'total' => (clone $countsQuery)->whereMonth('created_at', $month)->whereYear('created_at', $year)->count(),
+            'new' => (clone $countsQuery)->whereMonth('created_at', $month)->whereYear('created_at', $year)
+                ->where('lead_status_id', $statusIds['new'] ?? 'c0a80101-0000-0000-0000-000000000001')->count(),
+            'contacted' => (clone $countsQuery)->whereMonth('created_at', $month)->whereYear('created_at', $year)
+                ->where('lead_status_id', $statusIds['contacted'] ?? 'c0a80101-0000-0000-0000-000000000002')->count(),
+            'enrolled' => (clone $countsQuery)->where(function($q) use ($month, $year, $joinedStatusId) {
+                    // Inclusion criteria for "Enrolled" KPI
+                    $q->where(function($sq) use ($month, $year) {
+                        $sq->whereMonth('joined_at', $month)->whereYear('joined_at', $year);
+                    })->orWhere(function($sq) use ($month, $year, $joinedStatusId) {
+                        $sq->where('lead_status_id', $joinedStatusId)
+                           ->whereNull('joined_at')
+                           ->whereMonth('created_at', $month)
+                           ->whereYear('created_at', $year);
+                    });
+                })->count(),
+            'lost' => (clone $countsQuery)->whereMonth('created_at', $month)->whereYear('created_at', $year)
+                ->where('lead_status_id', $statusIds['lost'] ?? 'c0a80101-0000-0000-0000-000000000007')->count(),
+        ];
 
-
+        $targetQuery = MonthlyTarget::where('month', $month)->where('year', $year);
+        if ($branchId && $branchId !== 'all') $targetQuery->where('branch_id', $branchId);
 
         return Inertia::render('Crm/Leads/Index', [
-            'filters' => $request->only('search'),
-            'stats' => [
-                'total' => (clone $baseStatsQuery)->count(),
-                'new' => (clone $baseStatsQuery)->where('lead_status_id', '0ca51d27-0466-41fa-9cd0-02e0b57e7fc0')->count(),
-                'contacted' => (clone $baseStatsQuery)->where('lead_status_id', '4c3d8030-22c6-4152-a567-0cc4de7aef92')->count(),
-                'enrolled' => (clone $baseStatsQuery)->where('lead_status_id', '9571e1cd-fbda-476c-9a4d-e9cde60b1357')->count(), // 6 = Joined/Enrolled
-                'lost' => (clone $baseStatsQuery)->where('lead_status_id', 'e2079de6-e3d8-4f27-802c-7b243fc4a3f1')->count(),
-            ],
+            'filters' => $request->only(['search', 'branch_id', 'month', 'year', 'lead_source_id', 'temperature']),
+            'stats' => $stats,
             'monthlyTarget' => (int) $targetQuery->sum('target_enrolled'),
             'monthlyTargets' => $targetQuery->get(),
-            'leads' => $leads,
+            'leads' => \App\Http\Resources\Lead\LeadResource::collection($leads)->resolve(),
             'branches' => \App\Models\Branch::all(),
             'leadSources' => \App\Models\LeadSource::all(),
             'levels' => \App\Models\Level::all(),
@@ -100,7 +161,7 @@ class LeadController extends Controller
 
     public function export(Request $request, ExportLeadsAction $action)
     {
-        $callback = $action->execute($request->user(), $request->input('search'));
+        $callback = $action->execute($request->user(), $request->all());
 
         return response()->streamDownload($callback, 'leads-data-' . date('Y-m-d') . '.csv', [
             'Content-Type' => 'text/csv',
@@ -194,5 +255,12 @@ class LeadController extends Controller
         }
 
         return Redirect::back()->with('success', $message);
+    }
+
+    public function destroy(Lead $lead, DeleteLeadAction $action): RedirectResponse
+    {
+        $action->execute($lead);
+
+        return Redirect::back()->with('success', 'Lead has been deleted successfully.');
     }
 }

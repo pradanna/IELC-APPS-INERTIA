@@ -19,4 +19,14 @@ class LeadStatus extends Model
         'text_color',
         'bg_color'
     ];
+
+    /**
+     * Get the leads for this status.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function leads(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Lead::class);
+    }
 }

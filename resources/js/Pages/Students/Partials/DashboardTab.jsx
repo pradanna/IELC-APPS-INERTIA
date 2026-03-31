@@ -6,7 +6,7 @@ import ClassPlacementModal from '../Modals/ClassPlacementModal';
 // Recharts colors
 const COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#8b5cf6'];
 
-export default function DashboardTab({ kpi, pendingStudents, expiringStudents, chartData, availableClasses = {} }) {
+export default function DashboardTab({ kpi, pendingStudents, expiringStudents, chartData, availableClasses = {}, onCardClick }) {
     const [isPlacementModalOpen, setIsPlacementModalOpen] = useState(false);
     const [selectedStudentForPlot, setSelectedStudentForPlot] = useState(null);
 
@@ -19,8 +19,11 @@ export default function DashboardTab({ kpi, pendingStudents, expiringStudents, c
         <div className="space-y-6">
             {/* Lapis Atas: KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                <div 
+                    onClick={() => onCardClick({ status: 'active', filter: null })}
+                    className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-blue-100 transition-all group"
+                >
+                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
                         <Users className="w-6 h-6" />
                     </div>
                     <div>
@@ -29,8 +32,11 @@ export default function DashboardTab({ kpi, pendingStudents, expiringStudents, c
                     </div>
                 </div>
                 
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+                <div 
+                    onClick={() => onCardClick({ filter: 'new', status: null })}
+                    className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-green-100 transition-all group"
+                >
+                    <div className="p-3 bg-green-50 text-green-600 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors">
                         <UserPlus className="w-6 h-6" />
                     </div>
                     <div>
@@ -39,9 +45,12 @@ export default function DashboardTab({ kpi, pendingStudents, expiringStudents, c
                     </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-xl border border-red-100 shadow-sm flex items-center gap-4 relative overflow-hidden ring-1 ring-red-500/10">
+                <div 
+                    onClick={() => onCardClick({ filter: 'pending', status: null })}
+                    className="bg-white p-5 rounded-xl border border-red-100 shadow-sm flex items-center gap-4 relative overflow-hidden ring-1 ring-red-500/10 cursor-pointer hover:shadow-md hover:border-red-200 transition-all group"
+                >
                     <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
-                    <div className="p-3 bg-red-50 text-red-600 rounded-lg relative z-10 animate-pulse">
+                    <div className="p-3 bg-red-50 text-red-600 rounded-lg relative z-10 animate-pulse group-hover:bg-red-600 group-hover:text-white transition-colors">
                         <AlertCircle className="w-6 h-6" />
                     </div>
                     <div className="relative z-10">

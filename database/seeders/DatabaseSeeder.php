@@ -23,12 +23,16 @@ class DatabaseSeeder extends Seeder
             RoomSeeder::class,
             LevelSeeder::class,
             PackageSeeder::class,
+            MonthlyTargetSeeder::class,
             LeadStatusSeeder::class,
             LeadSourceSeeder::class,
             UserRoleSeeder::class,
             LeadSeeder::class,
             LeadFollowupSeeder::class,
+            StudyClassSeeder::class,
+            StudentSeeder::class,
             PtExamSeeder::class,
+            TestDataSeeder::class,
         ]);
     }
 }

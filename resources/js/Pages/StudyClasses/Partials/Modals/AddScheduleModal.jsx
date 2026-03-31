@@ -58,10 +58,12 @@ export default function AddScheduleModal({ show, onClose, studyClass, rooms = []
         { value: '7', label: 'Minggu' },
     ];
 
-    const roomOptions = rooms.map(room => ({
-        value: room.id,
-        label: `${room.name} (Kapasitas: ${room.capacity})`
-    }));
+    const roomOptions = rooms
+        .filter(room => room.branch_id === studyClass.branch_id)
+        .map(room => ({
+            value: room.id,
+            label: `${room.name} (Kapasitas: ${room.capacity})`
+        }));
 
     const teacherOptions = (studyClass?.teachers || teachers).map(t => ({
         value: t.id,

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('study_class_id')->constrained()->onDelete('cascade');
             $table->foreignUuid('teacher_id')->constrained('teachers')->onDelete('cascade');
             $table->foreignUuid('room_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('branch_id')->constrained()->onDelete('cascade');
             $table->unsignedTinyInteger('day_of_week')->comment('1=Mon, ..., 7=Sun');
             $table->time('start_time');
             $table->time('end_time');

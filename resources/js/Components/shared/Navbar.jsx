@@ -1,6 +1,7 @@
 import { Link } from "@inertiajs/react";
 import { Bell, Search } from "lucide-react";
 import { useState } from "react";
+import NotificationDropdown from "./NotificationDropdown";
 
 export default function Navbar({ user }) {
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -30,13 +31,7 @@ export default function Navbar({ user }) {
             <div className="flex items-center space-x-5">
                 {user ? (
                     <>
-                        <button className="relative text-gray-500 hover:text-gray-700">
-                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary-500"></span>
-                            </span>
-                            <Bell size={22} />
-                        </button>
+                        <NotificationDropdown user={user} />
 
                         {/* Profile Dropdown */}
                         <div className="relative">

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function Modal({
     show,
@@ -34,9 +35,9 @@ export default function Modal({
             "7xl": "sm:max-w-7xl",
         }[maxWidth] || "sm:max-w-lg";
 
-    return (
+    return createPortal(
         <div
-            className="fixed inset-0 z-[1000] overflow-y-auto"
+            className="fixed inset-0 z-[10000] overflow-y-auto"
             aria-labelledby="modal-title"
             role="dialog"
             aria-modal="true"
@@ -68,6 +69,7 @@ export default function Modal({
                     <div className="px-4 py-5 sm:p-6">{children}</div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

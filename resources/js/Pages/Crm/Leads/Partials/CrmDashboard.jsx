@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 import Card from "@/Components/ui/Card";
-import { Users, UserPlus, PhoneCall, UserX, UserCheck } from "lucide-react";
 import DataTable from "@/Components/ui/DataTable";
 import TableIconButton from "@/Components/ui/TableIconButton";
+import { Filter, Calendar, MapPin, Search, Thermometer } from "lucide-react";
 import {
     LineChart,
     Line,
@@ -13,6 +13,8 @@ import {
     Legend,
     ResponsiveContainer,
 } from "recharts";
+import { useCrmDashboard } from "../Hooks/useCrmDashboard";
+import ExportButton from "./ExportButton";
 
 export default function CrmDashboard({
     stats,
@@ -21,74 +23,27 @@ export default function CrmDashboard({
     monthlyTarget = 0,
     monthlyTargets = [],
     branches = [],
+    leadSources = [],
     onKpiClick,
+    filters = {},
 }) {
-    const [selectedBranchId, setSelectedBranchId] = useState("all");
+    const { kpis, urgentLeads, chartData, currentMonthlyTarget, handleFilterChange } = useCrmDashboard({
+        stats,
+        leads,
+        monthlyTarget,
+        monthlyTargets,
+        filters,
+    });
 
-    const kpis = [
-        {
-            label: "Total Leads",
-            value: stats.total,
-            icon: Users,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
-            filter: "all",
-        },
-        {
-            label: "New Leads",
-            value: stats.new,
-            icon: UserPlus,
-            color: "text-green-600",
-            bg: "bg-green-50",
-            filter: "New",
-        },
-        {
-            label: "Contacted",
-            value: stats.contacted,
-            icon: PhoneCall,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
-            filter: "Contacted",
-        },
-        {
-            label: "Enrolled",
-            value: stats.enrolled,
-            icon: UserCheck,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
-            filter: "Joined",
-        },
-        {
-            label: "Lost / Dropped",
-            value: stats.lost,
-            icon: UserX,
-            color: "text-red-600",
-            bg: "bg-red-50",
-            filter: "Lost",
-        },
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
     ];
 
-    // Filter Leads untuk menentukan urgensi follow-up
-    const urgentLeads = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-        return leads.filter((lead) => {
-            // 3. Sangat Krusial: New Lead yang baru masuk
-            if (lead.status?.toLowerCase() === "new") return true;
-
-            if (lead.next_followup_date) {
-                const followUpDate = new Date(lead.next_followup_date);
-                followUpDate.setHours(0, 0, 0, 0);
-
-                // 1 & 2. Jadwal Follow-up Hari ini atau sudah Terlewat (Overdue)
-                if (followUpDate <= today) return true;
-            }
-            return false;
-        });
-    }, [leads]);
-
-    // Kolom untuk Tabel Urgent
+    // TABLE COLUMN (URGENT)
     const urgentColumns = [
         {
             header: "Lead",
@@ -146,95 +101,104 @@ export default function CrmDashboard({
             header: "",
             accessor: "actions",
             render: (row) => (
-                <div className="flex justify-end">
+                <div className="flex justify-end pr-2">
                     <TableIconButton
                         type="detail"
-                        onClick={() =>
-                            onRowDetailClick && onRowDetailClick(row.id)
-                        }
+                        onClick={() => onRowDetailClick && onRowDetailClick(row.id)}
                     />
                 </div>
             ),
         },
     ];
 
-    const currentMonthlyTarget = useMemo(() => {
-        if (selectedBranchId === "all") {
-            return monthlyTargets.length > 0
-                ? monthlyTargets.reduce(
-                      (sum, target) => sum + Number(target.target_enrolled),
-                      0,
-                  )
-                : monthlyTarget;
-        }
-        const target = monthlyTargets.find(
-            (t) => t.branch_id === Number(selectedBranchId),
-        );
-        return target ? Number(target.target_enrolled) : 0;
-    }, [selectedBranchId, monthlyTargets, monthlyTarget]);
-
-    const chartData = useMemo(() => {
-        // Filter leads yang sudah enrolled ("joined")
-        let enrolledLeads = leads.filter(
-            (l) => l.status?.toLowerCase() === "joined",
-        );
-
-        if (selectedBranchId !== "all") {
-            enrolledLeads = enrolledLeads.filter(
-                (l) => l.branch_id === Number(selectedBranchId),
-            );
-        }
-
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth();
-        const daysInMonth = new Date(year, month + 1, 0).getDate(); // Jumlah hari bulan ini
-
-        const dailyCounts = {};
-        enrolledLeads.forEach((lead) => {
-            if (!lead.joined_at) return;
-
-            const leadDate = new Date(lead.joined_at);
-            // Hanya hitung enrollment di bulan dan tahun yang sama
-            if (
-                leadDate.getFullYear() === year &&
-                leadDate.getMonth() === month
-            ) {
-                dailyCounts[leadDate.getDate()] =
-                    (dailyCounts[leadDate.getDate()] || 0) + 1;
-            }
-        });
-
-        const data = [];
-        let cumulativeAchieved = 0;
-        const currentDay = today.getDate();
-
-        for (let i = 1; i <= daysInMonth; i++) {
-            cumulativeAchieved += dailyCounts[i] || 0;
-
-            const dataPoint = {
-                name: `${i} ${today.toLocaleDateString("id-ID", { month: "short" })}`,
-                Target: currentMonthlyTarget,
-            };
-
-            // Garis Achieved hanya digambar sampai tanggal hari ini
-            if (i <= currentDay) {
-                dataPoint.Achieved = cumulativeAchieved;
-            }
-
-            data.push(dataPoint);
-        }
-
-        return data;
-    }, [leads, selectedBranchId, currentMonthlyTarget]);
-
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">
-                    Leads Dashboard
-                </h2>
-            </div>
+            {/* Global Filters Section */}
+            <Card className="p-4 bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl">
+                <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg text-gray-400">
+                        <Filter className="h-4 w-4" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Filters</span>
+                    </div>
+
+                    {/* Branch Filter */}
+                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-2 bg-white hover:bg-gray-50/50 hover:border-gray-400 transition-all">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <select
+                            value={filters.branch_id || "all"}
+                            onChange={(e) => handleFilterChange("branch_id", e.target.value)}
+                            className="block w-full sm:w-auto border-0 py-1.5 pl-1 pr-8 text-sm focus:ring-0 focus:outline-none bg-transparent cursor-pointer"
+                        >
+                            <option value="all">All Branches</option>
+                            {branches.map((b) => (
+                                <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Month Filter */}
+                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-2 bg-white hover:bg-gray-50/50 hover:border-gray-400 transition-all">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <select
+                            value={filters.month || new Date().getMonth() + 1}
+                            onChange={(e) => handleFilterChange("month", e.target.value)}
+                            className="block w-full sm:w-auto border-0 py-1.5 pl-1 pr-8 text-sm focus:ring-0 focus:outline-none bg-transparent cursor-pointer"
+                        >
+                            {months.map((m, i) => (
+                                <option key={i} value={i + 1}>{m}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Year Filter */}
+                    <div className="flex items-center gap-1 border border-gray-300 rounded-lg px-2 bg-white hover:bg-gray-50/50 hover:border-gray-400 transition-all">
+                        <select
+                            value={filters.year || new Date().getFullYear()}
+                            onChange={(e) => handleFilterChange("year", e.target.value)}
+                            className="block w-full sm:w-auto border-0 py-1.5 pl-1 pr-8 text-sm focus:ring-0 focus:outline-none bg-transparent cursor-pointer"
+                        >
+                            {years.map((y) => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Lead Source Filter */}
+                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-2 bg-white hover:bg-gray-50/50 hover:border-gray-400 transition-all">
+                        <Search className="h-4 w-4 text-gray-400" />
+                        <select
+                            value={filters.lead_source_id || "all"}
+                            onChange={(e) => handleFilterChange("lead_source_id", e.target.value)}
+                            className="block w-full sm:w-auto border-0 py-1.5 pl-1 pr-8 text-sm focus:ring-0 focus:outline-none bg-transparent cursor-pointer"
+                        >
+                            <option value="all">All Sources</option>
+                            {leadSources.map((s) => (
+                                <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    {/* Temperature Filter */}
+                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-2 bg-white hover:bg-gray-50/50 hover:border-gray-400 transition-all">
+                        <Thermometer className="h-4 w-4 text-gray-400" />
+                        <select
+                            value={filters.temperature || "all"}
+                            onChange={(e) => handleFilterChange("temperature", e.target.value)}
+                            className="block w-full sm:w-auto border-0 py-1.5 pl-1 pr-8 text-sm focus:ring-0 focus:outline-none bg-transparent cursor-pointer"
+                        >
+                            <option value="all">All Temperatures</option>
+                            <option value="cold">Cold</option>
+                            <option value="warm">Warm</option>
+                            <option value="hot">Hot</option>
+                        </select>
+                    </div>
+
+                    {/* Export Button */}
+                    <div className="ml-auto">
+                        <ExportButton filters={filters} />
+                    </div>
+                </div>
+            </Card>
+
             {/* KPI Overview */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {kpis.map((kpi, idx) => {
@@ -247,15 +211,15 @@ export default function CrmDashboard({
                             role="button"
                             tabIndex={0}
                         >
-                            <Card className="flex items-center gap-4 p-5 h-full group-hover:shadow-md transition-all ring-1 ring-transparent group-hover:ring-primary-500/50">
+                            <Card className="flex items-center gap-4 p-5 h-full group-hover:shadow-md transition-all ring-1 ring-transparent hover:ring-primary-500/20">
                                 <div className={`p-3 rounded-xl ${kpi.bg}`}>
                                     <Icon className={`w-6 h-6 ${kpi.color}`} />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider leading-none mb-1">
                                         {kpi.label}
                                     </p>
-                                    <p className="text-2xl font-bold text-gray-900">
+                                    <p className="text-2xl font-bold text-gray-900 leading-none">
                                         {kpi.value}
                                     </p>
                                 </div>
@@ -265,9 +229,9 @@ export default function CrmDashboard({
                 })}
             </div>
 
-            {/* Priority Section Placeholder */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="p-0 overflow-hidden">
+                {/* Urgent Follow-ups Card */}
+                <Card className="p-0 overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-xl bg-white border-0">
                     <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-4 flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-gray-900">
                             Urgent Follow-ups
@@ -278,68 +242,46 @@ export default function CrmDashboard({
                             </span>
                         )}
                     </div>
-                    <div className="overflow-auto max-h-75">
+                    <div className="overflow-auto max-h-80">
                         {urgentLeads.length > 0 ? (
                             <DataTable
                                 data={urgentLeads}
                                 columns={urgentColumns}
                             />
                         ) : (
-                            <div className="p-5 text-sm text-gray-500 text-center py-10">
-                                No urgent follow-ups required at the moment.
+                            <div className="p-5 text-sm text-gray-500 text-center py-12">
+                                No urgent follow-ups required for the selected filters.
                             </div>
                         )}
                     </div>
                 </Card>
 
-                {/* Enrollment Target vs Achieved Chart */}
-                <Card className="p-0 flex flex-col">
-                    <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                {/* Enrollment Target Card */}
+                <Card className="p-0 flex flex-col shadow-sm ring-1 ring-gray-900/5 rounded-xl bg-white border-0">
+                    <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-4">
                         <h3 className="text-sm font-semibold text-gray-900">
                             Enrollment Target vs Achieved
                         </h3>
-                        {branches.length > 0 && (
-                            <select
-                                value={selectedBranchId}
-                                onChange={(e) =>
-                                    setSelectedBranchId(e.target.value)
-                                }
-                                className="block w-full sm:w-48 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-                            >
-                                <option value="all">All Branches</option>
-                                {branches.map((branch) => (
-                                    <option key={branch.id} value={branch.id}>
-                                        {branch.name}
-                                    </option>
-                                ))}
-                            </select>
-                        )}
                     </div>
-                    <div className="p-5 flex-1 min-h-75">
+                    <div className="p-5 flex-1 min-h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart
                                 data={chartData}
-                                margin={{
-                                    top: 30,
-                                    right: 30,
-                                    left: 0,
-                                    bottom: 5,
-                                }}
+                                margin={{ top: 20, right: 30, left: -20, bottom: 5 }}
                             >
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    vertical={false}
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis allowDecimals={false} fontSize={12} tickLine={false} axisLine={false} />
+                                <Tooltip 
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                 />
-                                <XAxis dataKey="name" />
-                                <YAxis allowDecimals={false} />
-                                <Tooltip />
                                 <Legend />
                                 <Line
                                     type="monotone"
                                     dataKey="Achieved"
                                     stroke="#10b981"
                                     strokeWidth={3}
-                                    activeDot={{ r: 6 }}
+                                    activeDot={{ r: 6, strokeWidth: 0 }}
                                     name="Enrolled Leads"
                                 />
                                 {currentMonthlyTarget > 0 && (

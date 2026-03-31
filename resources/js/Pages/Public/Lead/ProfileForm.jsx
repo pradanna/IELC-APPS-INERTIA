@@ -1,5 +1,6 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { User, Calendar, Phone, Mail, MapPin, CheckCircle } from 'lucide-react';
+import DatePicker from '@/Components/form/DatePicker';
 
 export default function ProfileForm({ lead, signature, expires }) {
     const { flash } = usePage().props;
@@ -83,15 +84,14 @@ export default function ProfileForm({ lead, signature, expires }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Tanggal Lahir</label>
-                                <div className="mt-1 relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Calendar className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="date"
+                                <div className="mt-1">
+                                    <DatePicker
+                                        id="dob"
                                         value={data.dob}
-                                        onChange={(e) => setData('dob', e.target.value)}
-                                        className="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg p-2.5 bg-gray-50 border"
+                                        onChange={(val) => setData('dob', val)}
+                                        placeholder="Pilih Tanggal Lahir"
+                                        minYear={1950}
+                                        inputClassName="!bg-gray-50 !p-2.5 !border-gray-300 !ring-0 !shadow-none"
                                     />
                                 </div>
                                 {errors.dob && <p className="mt-2 text-sm text-red-600">{errors.dob}</p>}

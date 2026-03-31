@@ -190,7 +190,7 @@ export default function DetailLead({ lead, onEditClick, onReviewProfile }) {
                 <DetailRow
                     icon={Info}
                     label="Lead Source"
-                    value={lead?.lead_source}
+                    value={lead?.source}
                 />
                 <DetailRow
                     icon={Briefcase}

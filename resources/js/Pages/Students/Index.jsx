@@ -1,18 +1,83 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import DashboardTab from './Partials/DashboardTab';
 import StudentTableTab from './Partials/StudentTableTab';
 import { LayoutDashboard, Users, BookOpen } from 'lucide-react';
 
-export default function Index({ kpi, pendingStudents, expiringStudents, chartData, students, availableClasses, branches, filters }) {
-    const [activeTab, setActiveTab] = useState('dashboard');
+export default function Index({ kpi, pendingStudents, expiringStudents, chartData, students, availableClasses, branches = [], filters = {} }) {
+    const [activeTab, setActiveTabState] = useState(filters.tab || 'dashboard');
+    
+    const setActiveTab = (tab) => {
+        setActiveTabState(tab);
+        router.get(route('admin.students.index'), {
+            ...filters,
+            tab: tab
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true
+        });
+    };
+
+    const handleCardClick = (extraFilters) => {
+        // Switch tab to data siswa and apply filters
+        setActiveTabState('data_siswa');
+        router.get(route('admin.students.index'), {
+            ...filters,
+            ...extraFilters,
+            tab: 'data_siswa'
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true
+        });
+    };
+
+    const handleBranchFilter = (branchId) => {
+        router.get(route('admin.students.index'), { 
+            ...filters,
+            branch_id: branchId,
+            tab: activeTab // Preserve current tab
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true
+        });
+    };
 
     return (
         <AdminLayout>
             <Head title="Students Management" />
 
             <div className="space-y-6">
+                {/* Branch Pills */}
+                <div className="flex flex-wrap items-center gap-2 pb-2">
+                    <button
+                        onClick={() => handleBranchFilter('all')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm border ${
+                            !filters.branch_id || filters.branch_id === 'all'
+                            ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
+                            : 'bg-white text-gray-500 border-gray-200 hover:border-primary-300 hover:text-primary-600'
+                        }`}
+                    >
+                        All Branches
+                    </button>
+                    {branches.map((branch) => (
+                        <button
+                            key={branch.id}
+                            onClick={() => handleBranchFilter(branch.id.toString())}
+                            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm border ${
+                                filters.branch_id === branch.id.toString()
+                                ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
+                                : 'bg-white text-gray-500 border-gray-200 hover:border-primary-300 hover:text-primary-600'
+                            }`}
+                        >
+                            {branch.name}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Students Management</h1>
@@ -57,6 +122,7 @@ export default function Index({ kpi, pendingStudents, expiringStudents, chartDat
                             expiringStudents={expiringStudents} 
                             chartData={chartData} 
                             availableClasses={availableClasses}
+                            onCardClick={handleCardClick}
                         />
                     )}
                     {activeTab === 'data_siswa' && (

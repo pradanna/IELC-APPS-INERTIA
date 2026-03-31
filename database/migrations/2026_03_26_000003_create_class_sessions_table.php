@@ -23,6 +23,7 @@ return new class extends Migration
             
             // Relasi ke Ruangan Aktual (PK UUID)
             $table->foreignUuid('room_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('branch_id')->constrained()->onDelete('cascade');
             
             // Relasi ke Guru Aktual/Pengganti (PK UUID)
             $table->foreignUuid('teacher_id')->constrained('teachers')->onDelete('cascade');

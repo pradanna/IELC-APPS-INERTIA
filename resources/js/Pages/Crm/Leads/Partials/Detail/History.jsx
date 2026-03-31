@@ -67,8 +67,16 @@ const EventIcon = ({ event }) => {
     );
 };
 
-const EventContent = ({ event, leadStatuses }) => {
+const EventContent = ({ 
+    event, 
+    leadStatuses = [], 
+    branches = [], 
+    leadSources = [], 
+    levels = [], 
+    packages = [] 
+}) => {
     if (event.type === "followup") {
+        // ... (existing follow-up logic)
         return (
             <>
                 <p className="text-sm text-gray-500">
@@ -101,8 +109,8 @@ const EventContent = ({ event, leadStatuses }) => {
     }
 
     // For activity logs (creation, status_change, update)
-    const causerName =
-        typeof event.causer === "object" ? event.causer?.name : event.causer;
+    const causerName = typeof event.causer === "object" ? event.causer?.name : event.causer;
+    
     return (
         <>
             <p className="text-sm text-gray-500">
@@ -121,62 +129,55 @@ const EventContent = ({ event, leadStatuses }) => {
                 event.properties?.old && (
                     <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-3 rounded-md border border-gray-200/80 overflow-x-auto">
                         <ul className="space-y-1.5">
-                            {Object.keys(event.properties.attributes).map(
-                                (key) => {
-                                    if (
-                                        key === "updated_at" ||
-                                        key === "created_at"
-                                    )
-                                        return null;
+                            {Object.keys(event.properties.attributes).map((key) => {
+                                if (key === "updated_at" || key === "created_at") return null;
 
-                                    let oldValue =
-                                        event.properties.old[key] ?? "none";
-                                    let newValue =
-                                        event.properties.attributes[key] ??
-                                        "none";
+                                let oldValue = event.properties.old[key] ?? "none";
+                                let newValue = event.properties.attributes[key] ?? "none";
 
-                                    // Translasi lead_status_id menjadi Nama Status
-                                    if (
-                                        key === "lead_status_id" &&
-                                        leadStatuses?.length > 0
-                                    ) {
-                                        const oldStat = leadStatuses.find(
-                                            (s) => String(s.id) === String(oldValue),
-                                        );
-                                        const newStat = leadStatuses.find(
-                                            (s) => String(s.id) === String(newValue),
-                                        );
-                                        if (oldStat) oldValue = oldStat.name;
-                                        if (newStat) newValue = newStat.name;
-                                    }
+                                // Translation logic for various IDs
+                                if (key === "lead_status_id") {
+                                    oldValue = leadStatuses.find(s => String(s.id) === String(oldValue))?.name || oldValue;
+                                    newValue = leadStatuses.find(s => String(s.id) === String(newValue))?.name || newValue;
+                                } else if (key === "branch_id") {
+                                    oldValue = branches.find(b => String(b.id) === String(oldValue))?.name || oldValue;
+                                    newValue = branches.find(b => String(b.id) === String(newValue))?.name || newValue;
+                                } else if (key === "lead_source_id") {
+                                    oldValue = leadSources.find(s => String(s.id) === String(oldValue))?.name || oldValue;
+                                    newValue = leadSources.find(s => String(s.id) === String(newValue))?.name || newValue;
+                                } else if (key === "interest_level_id") {
+                                    oldValue = levels.find(l => String(l.id) === String(oldValue))?.name || oldValue;
+                                    newValue = levels.find(l => String(l.id) === String(newValue))?.name || newValue;
+                                } else if (key === "interest_package_id") {
+                                    oldValue = packages.find(p => String(p.id) === String(oldValue))?.name || oldValue;
+                                    newValue = packages.find(p => String(p.id) === String(newValue))?.name || newValue;
+                                }
 
-                                    // Percantik teks key
-                                    const displayKey =
-                                        key === "lead_status_id"
-                                            ? "status"
-                                            : key.replace(/_/g, " ");
+                                // Key labels mapping
+                                const labels = {
+                                    lead_status_id: "status",
+                                    branch_id: "branch",
+                                    lead_source_id: "lead source",
+                                    interest_level_id: "interested level",
+                                    interest_package_id: "interested package",
+                                };
+                                const displayKey = labels[key] || key.replace(/_/g, " ");
 
-                                    return (
-                                        <li
-                                            key={key}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <span className="font-medium capitalize text-gray-600 min-w-[100px]">
-                                                {displayKey}
-                                            </span>
-                                            <span className="line-through text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                                                {String(oldValue)}
-                                            </span>
-                                            <span className="text-gray-400">
-                                                →
-                                            </span>
-                                            <span className="text-gray-700 font-medium bg-white px-1.5 py-0.5 rounded border border-gray-100">
-                                                {String(newValue)}
-                                            </span>
-                                        </li>
-                                    );
-                                },
-                            )}
+                                return (
+                                    <li key={key} className="flex items-center gap-2">
+                                        <span className="font-medium capitalize text-gray-600 min-w-[100px]">
+                                            {displayKey}
+                                        </span>
+                                        <span className="line-through text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                                            {String(oldValue)}
+                                        </span>
+                                        <span className="text-gray-400">→</span>
+                                        <span className="text-gray-700 font-medium bg-white px-1.5 py-0.5 rounded border border-gray-100">
+                                            {String(newValue)}
+                                        </span>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </div>
                 )}
@@ -184,7 +185,14 @@ const EventContent = ({ event, leadStatuses }) => {
     );
 };
 
-export default function History({ lead, leadStatuses = [] }) {
+export default function History({ 
+    lead, 
+    leadStatuses = [], 
+    branches = [], 
+    leadSources = [], 
+    levels = [], 
+    packages = [] 
+}) {
     const combinedHistory = useMemo(() => {
         if (!lead) return [];
 
@@ -266,6 +274,10 @@ export default function History({ lead, leadStatuses = [] }) {
                                         <EventContent
                                             event={event}
                                             leadStatuses={leadStatuses}
+                                            branches={branches}
+                                            leadSources={leadSources}
+                                            levels={levels}
+                                            packages={packages}
                                         />
                                     </div>
                                     <div className="flex flex-col items-end whitespace-nowrap text-right text-sm text-gray-500">

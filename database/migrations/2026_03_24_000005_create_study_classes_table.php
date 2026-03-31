@@ -11,7 +11,10 @@ return new class extends Migration
         Schema::create('study_classes', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('class_color')->default('#f3f4f6'); // Default soft gray
+            $table->foreignUuid('branch_id')->constrained('branches')->onDelete('cascade');
             $table->foreignUuid('package_id')->constrained('packages')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

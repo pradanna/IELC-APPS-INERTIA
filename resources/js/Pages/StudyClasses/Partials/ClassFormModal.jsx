@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import ReactSelect from 'react-select';
 import Modal from '@/Components/ui/Modal';
 import Button from '@/Components/ui/Button';
@@ -7,11 +7,13 @@ import InputLabel from '@/Components/ui/InputLabel';
 import Select from '@/Components/ui/Select';
 import Toast from '@/Components/ui/Toast';
 
-export default function ClassFormModal({ show, onClose, editingClass, packages, teachers }) {
+export default function ClassFormModal({ show, onClose, editingClass, packages, teachers, branches = [] }) {
+    const { auth } = usePage().props;
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
         package_id: '',
         teacher_ids: [],
+        branch_id: '',
     });
 
     useEffect(() => {
@@ -22,6 +24,7 @@ export default function ClassFormModal({ show, onClose, editingClass, packages, 
                     name: editingClass.name || '',
                     package_id: editingClass.package_id || '',
                     teacher_ids: editingClass.teachers?.map(t => t.id) || [],
+                    branch_id: editingClass.branch_id || '',
                 });
             } else {
                 reset();
@@ -71,6 +74,22 @@ export default function ClassFormModal({ show, onClose, editingClass, packages, 
             title={editingClass ? "Edit Kelas" : "Tambah Kelas Baru"}
         >
             <form onSubmit={submit} className="space-y-4 px-2">
+                {/* Branch Selection (Superadmin Only) */}
+                {auth?.user?.role === 'superadmin' && (
+                    <div>
+                        <InputLabel htmlFor="branch_id" value="Cabang (Branch)" required />
+                        <Select
+                            id="branch_id"
+                            value={data.branch_id}
+                            onChange={(val) => setData('branch_id', val)}
+                            options={branches.map(b => ({ value: b.id, label: b.name }))}
+                            placeholder="Pilih Cabang..."
+                            error={errors.branch_id}
+                        />
+                        {errors.branch_id && <p className="mt-1 text-xs text-red-500">{errors.branch_id}</p>}
+                    </div>
+                )}
+
                 <div>
                     <InputLabel htmlFor="name" value="Nama Kelas" required />
                     <input
@@ -111,7 +130,7 @@ export default function ClassFormModal({ show, onClose, editingClass, packages, 
                         classNamePrefix="react-select"
                         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                         styles={{
-                            menuPortal: base => ({ ...base, zIndex: 9999 }),
+                            menuPortal: base => ({ ...base, zIndex: 20000 }),
                             control: (base) => ({
                                 ...base,
                                 borderRadius: '0.5rem',

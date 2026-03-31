@@ -173,6 +173,7 @@ export default function Dashboard({ kpis, lists, charts, packages = [] }) {
             borderRadius: "0.5rem",
             padding: "2px 0",
         }),
+        menuPortal: (base) => ({ ...base, zIndex: 20000 }),
     };
 
     const handleRemoveItem = (id) => {

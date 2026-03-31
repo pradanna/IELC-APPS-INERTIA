@@ -1,8 +1,16 @@
 import React from 'react';
 import Badge from '@/Components/ui/Badge';
-import { Users } from 'lucide-react';
+import { Users, BarChart3, TrendingUp, Phone } from 'lucide-react';
+import StudentAcademicModal from './Modals/StudentAcademicModal';
 
-export default function StudentsTab({ students = [] }) {
+export default function StudentsTab({ students = [], studyClass }) {
+    const [selectedStudent, setSelectedStudent] = React.useState(null);
+    const [isAcademicModalOpen, setIsAcademicModalOpen] = React.useState(false);
+
+    const handleViewAcademic = (student) => {
+        setSelectedStudent(student);
+        setIsAcademicModalOpen(true);
+    };
     return (
         <div className="p-6">
             <div className="space-y-3">
@@ -18,13 +26,48 @@ export default function StudentsTab({ students = [] }) {
                                     </div>
                                 )}
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">{student.lead?.name || 'Siswa'}</p>
-                                    <p className="text-xs text-gray-500">{student.lead?.phone || 'No phone number'}</p>
+                                    <p className="text-sm font-bold text-gray-900 leading-none">{student.lead?.name || 'Siswa'}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-[10px] font-mono text-gray-400 uppercase tracking-tight">{student.nis}</span>
+                                        <span className="text-gray-300">•</span>
+                                        <a href={`tel:${student.lead?.phone}`} className="flex items-center gap-0.5 text-[10px] text-primary-600 hover:underline">
+                                            <Phone size={10} />
+                                            {student.lead?.phone || '-'}
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-end gap-1">
-                                <Badge variant="success" className="text-[10px] uppercase font-bold">{student.status || 'active'}</Badge>
-                                <span className="text-[9px] text-gray-400 font-mono tracking-tighter">{student.nis}</span>
+
+                            <div className="flex items-center gap-6">
+                                {/* Academic Mini Stats */}
+                                <div className="hidden sm:flex items-center gap-4">
+                                    <div className="text-right">
+                                        <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest">Avg. Score</p>
+                                        <p className={`text-xs font-bold ${
+                                            (student.scores_avg_total_score || 0) >= 80 ? 'text-emerald-600' : 
+                                            (student.scores_avg_total_score || 0) >= 60 ? 'text-amber-600' : 'text-red-600'
+                                        }`}>
+                                            {student.scores_avg_total_score ? parseFloat(student.scores_avg_total_score).toFixed(1) : '0.0'}
+                                        </p>
+                                    </div>
+                                    <div className="text-right pr-2">
+                                        <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest">Attendance</p>
+                                        <p className="text-xs font-bold text-gray-900">
+                                            {student.total_attended || 0} Ses
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleViewAcademic(student)}
+                                        className="p-2 transition-all text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg group"
+                                        title="Liat Detail Akademik"
+                                    >
+                                        <BarChart3 size={18} className="group-hover:scale-110 transition-transform" />
+                                    </button>
+                                    <Badge variant="success" className="text-[9px] uppercase font-black tracking-tighter px-1.5 py-0">Active</Badge>
+                                </div>
                             </div>
                         </div>
                     ))
@@ -35,6 +78,13 @@ export default function StudentsTab({ students = [] }) {
                     </div>
                 )}
             </div>
+
+            <StudentAcademicModal 
+                show={isAcademicModalOpen}
+                onClose={() => setIsAcademicModalOpen(false)}
+                student={selectedStudent}
+                studyClass={studyClass}
+            />
         </div>
     );
 }

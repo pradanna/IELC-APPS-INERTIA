@@ -24,8 +24,9 @@ class UpdateLeadStatus
 
         $lead->lead_status_id = $statusId;
 
-        // Asumsi UUID 'c0a80101-0000-0000-0000-000000000006' adalah status 'Joined' / 'Enrolled'
-        if ($statusId === 'c0a80101-0000-0000-0000-000000000006' && is_null($lead->joined_at)) {
+        // Deteksi apakah status baru adalah "Joined" berdasarkan nama, bukan hardcoded UUID
+        $status = \App\Models\LeadStatus::find($statusId);
+        if ($status && strtolower($status->name) === 'joined' && is_null($lead->joined_at)) {
             $lead->joined_at = now();
         }
 

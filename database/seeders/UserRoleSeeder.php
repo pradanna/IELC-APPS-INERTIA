@@ -41,7 +41,24 @@ class UserRoleSeeder extends Seeder
             $user->superadmin()->save(Superadmin::factory()->make());
         });
 
-        // 2. Create Frontdesks for each branch
+        // 2. Create Frontdesks
+        // Create one specific frontdesk for easy testing
+        $soloBranch = Branch::where('name', 'Solo')->first();
+        if ($soloBranch) {
+            $frontdeskUser = User::factory()->create([
+                'email' => 'frontdesk@ielc.com',
+                'password' => Hash::make('password'),
+                'role' => 'frontdesk',
+            ]);
+            
+            Frontdesk::factory()->create([
+                'user_id'   => $frontdeskUser->id,
+                'branch_id' => $soloBranch->id,
+                'name'      => 'Frontdesk Solo',
+            ]);
+        }
+
+        // Create random frontdesks for each branch
         $branches->each(function ($branch) {
             User::factory()->count(2)->create(['role' => 'frontdesk'])->each(function ($user) use ($branch) {
                 $user->frontdesk()->save(Frontdesk::factory()->make([

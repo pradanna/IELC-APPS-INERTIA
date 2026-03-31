@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from "react";
+import { router } from "@inertiajs/react";
 import Panel from "@/Components/ui/Panel";
 import DataTable from "@/Components/ui/DataTable";
 import StatusBadge from "@/Components/ui/StatusBadge";
 import TableIconButton from "@/Components/ui/TableIconButton";
 import SearchInput from "@/Components/ui/SearchInput";
 import Select from "@/Components/ui/Select";
+import ExportButton from "./ExportButton";
 
 export default function LeadTable({
     leads,
@@ -17,10 +19,38 @@ export default function LeadTable({
     processingStatusUpdate,
     statusFilter = "all",
     setStatusFilter = () => {},
+    filters = {},
 }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [sourceFilter, setSourceFilter] = useState("all");
     const [followupFilter, setFollowupFilter] = useState("all");
+    const [temperatureFilter, setTemperatureFilter] = useState("all");
+
+    // Check if any global filters are active
+    const hasGlobalFilters = useMemo(() => {
+        return (
+            (filters.search && filters.search !== "") ||
+            (filters.branch_id && filters.branch_id !== "all") ||
+            (filters.lead_source_id && filters.lead_source_id !== "all") ||
+            (filters.temperature && filters.temperature !== "all")
+            // Note: Month and year are always active by default (now)
+        );
+    }, [filters]);
+
+    const handleClearAllFilters = () => {
+        setSearchTerm("");
+        setSourceFilter("all");
+        setFollowupFilter("all");
+        setTemperatureFilter("all");
+        setStatusFilter("all");
+        
+        // Reset URL parameters
+        router.get(route("admin.crm.leads.index"), {}, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true
+        });
+    };
 
     const sources = useMemo(() => {
         const uniqueSources = new Set(
@@ -56,6 +86,12 @@ export default function LeadTable({
             const matchesSource =
                 sourceFilter === "all" || lead.source === sourceFilter;
 
+            const matchesTemperature =
+                temperatureFilter === "all" ||
+                (lead.temperature &&
+                    lead.temperature.toLowerCase() ===
+                        temperatureFilter.toLowerCase());
+
             let matchesFollowup = true;
             if (followupFilter !== "all") {
                 if (!lead.next_followup_date) {
@@ -79,6 +115,7 @@ export default function LeadTable({
                 matchesSearch &&
                 matchesStatus &&
                 matchesSource &&
+                matchesTemperature &&
                 matchesFollowup
             );
         });
@@ -258,6 +295,13 @@ export default function LeadTable({
         { value: "this_week", label: "This Week" },
     ];
 
+    const temperatureOptions = [
+        { value: "all", label: "All Temperatures" },
+        { value: "cold", label: "Cold" },
+        { value: "warm", label: "Warm" },
+        { value: "hot", label: "Hot" },
+    ];
+
     return (
         <Panel
             title="All Leads"
@@ -298,6 +342,31 @@ export default function LeadTable({
                             className="  z-20"
                         />
                     </div>
+                    <div className="min-w-50">
+                        <Select
+                            value={temperatureFilter}
+                            onChange={(val) => setTemperatureFilter(val)}
+                            options={temperatureOptions}
+                            className="  z-10"
+                        />
+                    </div>
+                </div>
+                <div className="mt-4 sm:mt-0 flex items-center gap-2">
+                    {hasGlobalFilters && (
+                        <button
+                            type="button"
+                            onClick={handleClearAllFilters}
+                            className="bg-white text-xs font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 px-3 py-2 rounded-lg transition-all"
+                        >
+                            Reset All Filters
+                        </button>
+                    )}
+                    <ExportButton filters={{ 
+                        search: searchTerm, 
+                        status: statusFilter, 
+                        source: sourceFilter, 
+                        followup: followupFilter 
+                    }} />
                 </div>
             </div>
             <DataTable data={filteredLeads} columns={columns} />

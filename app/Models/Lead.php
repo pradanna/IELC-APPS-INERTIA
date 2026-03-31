@@ -126,4 +126,12 @@ class Lead extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+
+    /**
+     * Get the student record associated with the lead.
+     */
+    public function student(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Student::class);
+    }
 }

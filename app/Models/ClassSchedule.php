@@ -7,14 +7,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Traits\HasBranchScope;
+
 class ClassSchedule extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, HasBranchScope;
 
     protected $fillable = [
         'study_class_id',
         'teacher_id',
         'room_id',
+        'branch_id',
         'day_of_week',
         'start_time',
         'end_time',
@@ -50,5 +53,10 @@ class ClassSchedule extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

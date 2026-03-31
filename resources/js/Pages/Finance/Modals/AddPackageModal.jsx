@@ -64,6 +64,7 @@ export default function AddPackageModal({
                                 styles={reactSelectStyles}
                                 menuPosition="fixed"
                                 isClearable
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                                 className="w-full"
                             />
                         </div>

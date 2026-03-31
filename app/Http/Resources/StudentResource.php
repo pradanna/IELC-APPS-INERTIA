@@ -48,6 +48,7 @@ class StudentResource extends JsonResource
             ]),
             'status' => ucfirst($this->status),
             'branch' => $this->lead->branch->name ?? '-',
+            'branch_id' => $this->lead->branch_id,
             'purchased_packages' => $purchasedPackages,
             'created_at' => $this->created_at->format('d M Y'),
         ];

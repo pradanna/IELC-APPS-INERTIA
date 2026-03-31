@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasBranchScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,21 +11,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StudyClass extends Model
 {
-    use HasFactory;
+    use HasFactory, HasBranchScope;
 
     protected $fillable = [
+        'branch_id',
         'name',
+        'class_color',
         'package_id',
     ];
 
     public function classSchedules(): HasMany
     {
-        return $this->hasMany(ClassSchedule::class);
+        return $this->hasMany(ClassSchedule::class)->orderBy('start_time', 'asc');
     }
 
     public function classSessions(): HasMany
     {
-        return $this->hasMany(ClassSession::class);
+        return $this->hasMany(ClassSession::class)->orderBy('date', 'asc')->orderBy('start_time', 'asc');
     }
 
     // Relasi ke paket yang dipilih (Master Package)

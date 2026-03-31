@@ -5,7 +5,8 @@ import InputLabel from "@/Components/ui/InputLabel";
 import TextInput from "@/Components/form/TextInput";
 import TextArea from "@/Components/ui/TextArea";
 import Select from "react-select";
-import ReactDatePicker from "react-datepicker";
+import DatePicker from "@/Components/form/DatePicker";
+
 import { toTitleCase } from "@/lib/utils";
 
 export default function EditLeadModal({
@@ -76,6 +77,7 @@ export default function EditLeadModal({
             borderRadius: "0.5rem",
             padding: "2px 0",
         }),
+        menuPortal: (base) => ({ ...base, zIndex: 20000 }),
     };
 
     return (
@@ -150,14 +152,12 @@ export default function EditLeadModal({
 
                     <div>
                         <InputLabel htmlFor="edit_dob">Date of Birth</InputLabel>
-                        <TextInput
+                        <DatePicker
                             id="edit_dob"
-                            type="date"
                             value={editForm.data.dob}
-                            onChange={(e) =>
-                                editForm.setData("dob", e.target.value)
-                            }
-                            className="mt-1 block w-full"
+                            onChange={(date) => editForm.setData("dob", date)}
+                            placeholder="Select birthday"
+                            minYear={1950}
                         />
                     </div>
 
@@ -235,6 +235,7 @@ export default function EditLeadModal({
                                 placeholder="Select Branch"
                                 isClearable
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                             {editForm.errors.branch_id && (
                                 <p className="mt-1 text-xs text-red-600">
@@ -264,6 +265,7 @@ export default function EditLeadModal({
                                 placeholder="Select Source"
                                 isClearable
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                         </div>
                     </div>
@@ -285,6 +287,7 @@ export default function EditLeadModal({
                                 placeholder="Select Level"
                                 isClearable
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                         </div>
                     </div>
@@ -306,6 +309,7 @@ export default function EditLeadModal({
                                 placeholder="Select Package"
                                 isClearable
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                         </div>
                     </div>
@@ -331,6 +335,7 @@ export default function EditLeadModal({
                                     editForm.setData("temperature", opt ? opt.value : "warm")
                                 }
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                         </div>
                     </div>

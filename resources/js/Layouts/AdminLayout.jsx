@@ -14,6 +14,8 @@ import {
     PhoneCall,
     FileText,
     CircleDollarSign,
+    ClipboardCheck,
+    GraduationCap,
 } from "lucide-react";
 import Navbar from "@/Components/shared/Navbar";
 import Toast from "@/Components/ui/Toast";
@@ -77,6 +79,24 @@ const menuItems = [
                 href: route("admin.study-classes.index"),
                 name: "admin.study-classes.*",
             },
+            {
+                icon: <LayoutDashboard size={20} />,
+                text: "Schedule",
+                href: route("admin.schedules.index"),
+                name: "admin.schedules.*",
+            },
+            {
+                icon: <ClipboardCheck size={20} />,
+                text: "Attendances",
+                href: route("admin.attendances.index"),
+                name: "admin.attendances.*",
+            },
+            {
+                icon: <GraduationCap size={20} />,
+                text: "Academic",
+                href: route("admin.academic.index"),
+                name: "admin.academic.*",
+            },
         ],
     },
     {
@@ -114,6 +134,30 @@ const SidebarContext = React.createContext();
 export default function AdminLayout({ children }) {
     const [expanded, setExpanded] = React.useState(true);
     const { auth } = usePage().props;
+    const userRole = auth.user.role;
+
+    const filteredMenu = menuItems.filter(group => {
+        if (userRole === 'superadmin') return true;
+        
+        if (userRole === 'frontdesk') {
+            // Frontdesk sees Main and Management, but not Finance or System
+            return ['Main', 'Management', 'Users'].includes(group.category);
+        }
+
+        return false;
+    }).map(group => {
+        if (userRole === 'frontdesk' && group.category === 'Management') {
+            return {
+                ...group,
+                items: group.items.filter(item => 
+                    // Frontdesk doesn't see Master or Academic at this level?
+                    // Actually let's just keep everything in Management for now but exclude Master
+                    !['Master'].includes(item.text)
+                )
+            };
+        }
+        return group;
+    });
 
     return (
         <div className="flex">
@@ -141,7 +185,7 @@ export default function AdminLayout({ children }) {
 
                     <SidebarContext.Provider value={{ expanded }}>
                         <ul className="flex-1 px-3">
-                            {menuItems.map((group, index) => (
+                            {filteredMenu.map((group, index) => (
                                 <React.Fragment key={index}>
                                     {group.category && expanded && (
                                         <li className="px-3 pt-4 pb-2 text-xs font-semibold uppercase text-gray-400">

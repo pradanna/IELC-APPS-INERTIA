@@ -26,15 +26,24 @@ class StudentController extends Controller
 
     public function index(Request $request)
     {
+        $branchId = $request->get('branch_id');
+
         // Query Students with filtering
         $studentsQuery = Student::with(['lead.interestPackage', 'lead.branch', 'studyClasses'])
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
             })
-            ->when($request->branch_id, function ($query, $branchId) {
+            ->when($branchId && $branchId !== 'all', function ($query) use ($branchId) {
                 $query->whereHas('lead', function ($q) use ($branchId) {
                     $q->where('branch_id', $branchId);
                 });
+            })
+            ->when($request->filter === 'new', function ($query) {
+                $query->whereMonth('created_at', now()->month)
+                      ->whereYear('created_at', now()->year);
+            })
+            ->when($request->filter === 'pending', function ($query) {
+                $query->whereDoesntHave('studyClasses');
             })
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -47,23 +56,28 @@ class StudentController extends Controller
             })
             ->latest();
         
-        // Paginate (Using appends to keep filter state in pagination links if needed)
+        // Paginate
         $paginatedStudents = $studentsQuery->paginate(15)->withQueryString();
         $formattedStudents = StudentResource::collection($paginatedStudents);
 
         // Fetch Support Data
         $branches = \App\Models\Branch::all(['id', 'name']);
 
-        // Calculate KPIs dynamically (Still global)
-        $totalActive = Student::where('status', 'active')->count();
-        $newStudents = Student::whereMonth('created_at', Carbon::now()->month)
+        // Calculate KPIs dynamically (Filter by branch if provided)
+        $kpiQuery = Student::when($branchId && $branchId !== 'all', function ($query) use ($branchId) {
+            $query->whereHas('lead', fn($q) => $q->where('branch_id', $branchId));
+        });
+
+        $totalActive = (clone $kpiQuery)->where('status', 'active')->count();
+        $newStudents = (clone $kpiQuery)->whereMonth('created_at', Carbon::now()->month)
                                 ->whereYear('created_at', Carbon::now()->year)
                                 ->count();
-        $pendingPlacementQuery = Student::where('status', 'active')->whereDoesntHave('studyClasses');
-        $pendingPlacement = $pendingPlacementQuery->count();
+        
+        $pendingPlacementBaseQuery = (clone $kpiQuery)->where('status', 'active')->whereDoesntHave('studyClasses');
+        $pendingPlacement = $pendingPlacementBaseQuery->count();
 
         // 5 Siswa terbaru yang belum di plot ke study_class mana pun
-        $pendingStudents = $pendingPlacementQuery->with(['lead.interestPackage', 'lead.invoices.items'])->latest()->take(5)->get()->map(function($student) {
+        $pendingStudents = $pendingPlacementBaseQuery->with(['lead.interestPackage', 'lead.invoices.items'])->latest()->take(5)->get()->map(function($student) {
             $purchasedPackages = $student->lead->invoices()
                 ->where('status', 'paid')
                 ->with('items')
@@ -83,14 +97,15 @@ class StudentController extends Controller
                 'nis' => $student->nis,
                 'package' => $student->lead->interestPackage->name ?? '-',
                 'purchased_packages' => $purchasedPackages,
+                'branch_id' => $student->lead->branch_id,
             ];
         });
 
         // Expiring Students (Saat ini kosong)
         $expiringStudents = [];
 
-        // Kalkulasi Chart Data
-        $packagesCount = Student::whereHas('lead.interestPackage')
+        // Kalkulasi Chart Data (Respect Branch)
+        $packagesCount = (clone $kpiQuery)->whereHas('lead.interestPackage')
             ->with('lead.interestPackage')
             ->get()
             ->groupBy(fn($student) => $student->lead->interestPackage->name)
@@ -118,7 +133,7 @@ class StudentController extends Controller
             'students' => $formattedStudents,
             'availableClasses' => $availableClasses,
             'branches' => $branches,
-            'filters' => $request->only(['status', 'branch_id', 'search']),
+            'filters' => $request->only(['status', 'branch_id', 'search', 'tab', 'filter']),
         ]);
     }
 

@@ -25,4 +25,9 @@ class Package extends Model
     {
         return $this->hasMany(Lead::class, 'interest_package_id');
     }
+
+    public function studyClasses(): HasMany
+    {
+        return $this->hasMany(StudyClass::class);
+    }
 }

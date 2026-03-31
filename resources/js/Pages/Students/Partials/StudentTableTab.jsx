@@ -91,18 +91,6 @@ export default function StudentTableTab({ students, availableClasses = {}, branc
                         />
                     </div>
 
-                    {/* Branch Filter */}
-                    <select 
-                        value={filters.branch_id || ''}
-                        onChange={(e) => handleFilterChange('branch_id', e.target.value)}
-                        className="flex-none min-w-[130px] pr-8 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer"
-                    >
-                        <option value="">Semua Cabang</option>
-                        {branches.map(branch => (
-                            <option key={branch.id} value={branch.id}>{branch.name}</option>
-                        ))}
-                    </select>
-
                     {/* Status Filter */}
                     <select 
                         value={filters.status || ''}

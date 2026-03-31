@@ -50,6 +50,7 @@ export default function PtScheduleModal({
             borderRadius: "0.5rem",
             padding: "2px 0",
         }),
+        menuPortal: (base) => ({ ...base, zIndex: 20000 }),
     };
 
     return (
@@ -111,6 +112,7 @@ export default function PtScheduleModal({
                             placeholder="-- Pilih Paket Pendaftaran --"
                             isClearable
                             className="w-full"
+                            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                         />
                     </div>
                 </div>

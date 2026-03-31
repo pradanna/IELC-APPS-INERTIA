@@ -10,10 +10,8 @@ import { Plus, Eye } from 'lucide-react';
 import ClassFormModal from './Partials/ClassFormModal';
 import StudyClassDetailSlider from './Partials/StudyClassDetailSlider';
 
-export default function Index({ studyClasses, packages, teachers, rooms }) {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedPackage, setSelectedPackage] = useState(null);
-    const [selectedTeacher, setSelectedTeacher] = useState(null);
+export default function Index({ studyClasses, packages, teachers, rooms, branches = [], filters = {} }) {
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClass, setEditingClass] = useState(null);
     const [selectedClassId, setSelectedClassId] = useState(null);
@@ -36,21 +34,9 @@ export default function Index({ studyClasses, packages, teachers, rooms }) {
         ...(teachers?.map(t => ({ value: t.id, label: t.name })) || [])
     ];
 
-    // Filter Logic
-    const filteredData = classData.filter(item => {
-        // Search Term Filter
-        const matchSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            item.package?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            item.teachers?.some(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        
-        // Package Filter
-        const matchPackage = !selectedPackage || selectedPackage.value === 'all' || item.package_id === selectedPackage.value;
-        
-        // Teacher Filter
-        const matchTeacher = !selectedTeacher || selectedTeacher.value === 'all' || item.teachers?.some(t => t.id === selectedTeacher.value);
-
-        return matchSearch && matchPackage && matchTeacher;
-    });
+    // Filter states (Derived from URL/Props)
+    const selectedPackage = packageFilterOptions.find(opt => opt.value == filters.package_id) || { value: 'all', label: 'Semua Paket' };
+    const selectedTeacher = teacherFilterOptions.find(opt => opt.value == filters.teacher_id) || { value: 'all', label: 'Semua Pengajar' };
 
     const handleCreate = () => {
         setEditingClass(null);
@@ -69,13 +55,30 @@ export default function Index({ studyClasses, packages, teachers, rooms }) {
 
     const handleDelete = (rowData) => {
         if (confirm(`Apakah Anda yakin ingin menghapus kelas "${rowData.name}"?`)) {
-            router.delete(route('admin.study-classes.destroy', rowData.id));
+            router.delete(route('admin.study-classes.destroy', rowData.id), {
+                preserveScroll: true
+            });
         }
     };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingClass(null);
+    };
+
+    const handleFilterChange = (newFilters) => {
+        router.get(route('admin.study-classes.index'), { 
+            ...filters,
+            ...newFilters
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true
+        });
+    };
+
+    const handleBranchFilter = (branchId) => {
+        handleFilterChange({ branch_id: branchId });
     };
 
     const columns = [
@@ -117,12 +120,18 @@ export default function Index({ studyClasses, packages, teachers, rooms }) {
         }
     ];
 
+    const handleSearch = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        handleFilterChange({ search: value });
+    };
+
     const filterSection = (
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
             <div className="w-full md:w-1/3">
                 <SearchInput 
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={handleSearch}
                     placeholder="Cari nama kelas..."
                 />
             </div>
@@ -131,14 +140,14 @@ export default function Index({ studyClasses, packages, teachers, rooms }) {
                     <ReactSelect 
                         options={packageFilterOptions}
                         value={selectedPackage}
-                        onChange={setSelectedPackage}
+                        onChange={(opt) => handleFilterChange({ package_id: opt?.value || 'all' })}
                         placeholder="Filter by Paket..."
                         className="text-sm"
                         classNamePrefix="react-select"
                         isClearable
                         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                         styles={{
-                            menuPortal: base => ({ ...base, zIndex: 9999 }),
+                            menuPortal: base => ({ ...base, zIndex: 20000 }),
                             control: (base) => ({
                                 ...base,
                                 borderRadius: '0.5rem',
@@ -154,7 +163,7 @@ export default function Index({ studyClasses, packages, teachers, rooms }) {
                     <ReactSelect 
                         options={teacherFilterOptions}
                         value={selectedTeacher}
-                        onChange={setSelectedTeacher}
+                        onChange={(opt) => handleFilterChange({ teacher_id: opt?.value || 'all' })}
                         placeholder="Filter by Pengajar..."
                         className="text-sm"
                         classNamePrefix="react-select"
@@ -182,10 +191,37 @@ export default function Index({ studyClasses, packages, teachers, rooms }) {
             <Head title="Class Management" />
 
             <div className="space-y-6">
+                {/* Branch Pills */}
+                <div className="flex flex-wrap items-center gap-2 pb-2">
+                    <button
+                        onClick={() => handleBranchFilter('all')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm border ${
+                            !filters.branch_id || filters.branch_id === 'all'
+                            ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
+                            : 'bg-white text-gray-500 border-gray-200 hover:border-primary-300 hover:text-primary-600'
+                        }`}
+                    >
+                        All Branches
+                    </button>
+                    {branches.map((branch) => (
+                        <button
+                            key={branch.id}
+                            onClick={() => handleBranchFilter(branch.id.toString())}
+                            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm border ${
+                                filters.branch_id === branch.id.toString()
+                                ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
+                                : 'bg-white text-gray-500 border-gray-200 hover:border-primary-300 hover:text-primary-600'
+                            }`}
+                        >
+                            {branch.name}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Study Class Management</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">Study Class Management</h1>
                         <p className="text-sm text-gray-500 mt-1">Kelola data ruang kelas belajar, paket belajar, dan pengajar.</p>
                     </div>
                     <div>
@@ -203,9 +239,10 @@ export default function Index({ studyClasses, packages, teachers, rooms }) {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-0 overflow-hidden">
                     <DataTable 
                         columns={columns}
-                        data={filteredData}
+                        data={classData}
                         filterSection={filterSection}
-                        itemsPerPage={10}
+                        itemsPerPage={10} 
+                        pagination={studyClasses}
                     />
                 </div>
             </div>
@@ -216,6 +253,7 @@ export default function Index({ studyClasses, packages, teachers, rooms }) {
                 editingClass={editingClass}
                 packages={packages}
                 teachers={teachers}
+                branches={branches}
             />
 
             {/* Detail Slider */}

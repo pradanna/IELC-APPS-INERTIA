@@ -63,6 +63,15 @@ Route::middleware('auth')->group(function () {
 
 // 4. Role-Specific Route Groups
 Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // ROUTE TEST BROADCAST (Hapus setelah selesai)
+    Route::get('/ping-user/{id}', function ($id) {
+        \Illuminate\Support\Facades\Broadcast::on('App.Models.User.'.$id)
+            ->as('test.event')
+            ->with(['message' => 'WE ARE CONNECTED! IT WORKS!'])
+            ->send();
+        return "Ping sent to user $id. Check your browser console!";
+    });
 
     // Route::get('/crm/follow-up', [FollowUpController::class, 'index'])->name('crm.follow-up.index');
 
@@ -126,18 +135,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('/teachers', TeacherController::class)->names('teachers');
         
         Route::resource('/study-classes', StudyClassController::class)->names('study-classes');
+        Route::get('/study-classes/{studyClass}/students/{student}/academic', [StudyClassController::class, 'getStudentAcademic'])->name('study-classes.student-academic');
         Route::post('/study-classes/{studyClass}/schedules', [StudyClassController::class, 'storeSchedule'])->name('study-classes.store-schedule');
         Route::put('/study-classes/schedules/{schedule}', [StudyClassController::class, 'updateSchedule'])->name('study-classes.update-schedule');
+        
+        Route::get('/schedules', [App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedules.index');
+        Route::get('/schedules/pdf', [App\Http\Controllers\Admin\ScheduleController::class, 'downloadPdf'])->name('schedules.download-pdf');
+        Route::post('/schedules', [App\Http\Controllers\Admin\ScheduleController::class, 'store'])->name('schedules.store');
+        Route::post('/schedules/move', [App\Http\Controllers\Admin\ScheduleController::class, 'move'])->name('schedules.move');
+        Route::put('/schedules', [App\Http\Controllers\Admin\ScheduleController::class, 'update'])->name('schedules.update');
+        Route::delete('/schedules', [App\Http\Controllers\Admin\ScheduleController::class, 'destroy'])->name('schedules.destroy');
 
+        Route::get('/attendances', [App\Http\Controllers\Admin\AttendanceController::class, 'index'])->name('attendances.index');
+        Route::get('/attendances/search-students', [App\Http\Controllers\Admin\AttendanceController::class, 'searchStudents'])->name('attendances.search-students');
+        Route::get('/attendances/initiate/{type}/{id}', [App\Http\Controllers\Admin\AttendanceController::class, 'initiate'])->name('attendances.initiate');
+        Route::get('/attendances/{classSession}', [App\Http\Controllers\Admin\AttendanceController::class, 'show'])->name('attendances.show');
+        Route::post('/attendances/{classSession}', [App\Http\Controllers\Admin\AttendanceController::class, 'store'])->name('attendances.store');
+        Route::get('/attendances/{classSession}/export-pdf', [App\Http\Controllers\Admin\AttendanceController::class, 'exportPdf'])->name('attendances.export-pdf');
+        
+        // --- ACADEMIC MANAGEMENT (NEW) ---
+        Route::get('/academic', [App\Http\Controllers\Admin\AcademicController::class, 'index'])->name('academic.index');
+        Route::get('/academic/{studyClass}/entry', [App\Http\Controllers\Admin\AcademicController::class, 'show'])->name('academic.show');
+        Route::get('/academic/{studyClass}/report', [App\Http\Controllers\Admin\AcademicController::class, 'report'])->name('academic.report');
+        Route::get('/academic/{studyClass}/export-pdf', [App\Http\Controllers\Admin\AcademicController::class, 'exportPdf'])->name('academic.export-pdf');
+        Route::post('/academic/{studyClass}', [App\Http\Controllers\Admin\AcademicController::class, 'store'])->name('academic.store');
 
+        Route::get('/notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{id}/read', [App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
-        // ... dalam grup middleware auth
+        // Finance DASHBOARD
         Route::get('/finance/dashboard', [FinanceDashboardController::class, 'index'])->name('finance.dashboard');
         Route::post('/finance/invoices', [FinanceDashboardController::class, 'storeInvoice'])->name('finance.invoices.store');
         Route::put('/finance/invoices/{invoice}', [FinanceDashboardController::class, 'updateInvoice'])->name('finance.invoices.update');
         Route::put('/finance/invoices/{invoice}/status', [FinanceDashboardController::class, 'updateStatus'])->name('finance.invoices.update-status');
-
         Route::get('/admin/finance/invoices/{invoice}/pdf', [FinanceDashboardController::class, 'downloadPdf'])->name('admin.finance.invoices.pdf');
+        
+        // Student Score
+        Route::post('/students/{student}/scores', [App\Http\Controllers\Admin\StudentScoreController::class, 'store'])->name('student-scores.store');
+        Route::get('/student-scores/{score}/pdf', [App\Http\Controllers\Admin\StudentScoreController::class, 'downloadPdf'])->name('student-scores.pdf');
     });
 
     // -- FRONTDESK --

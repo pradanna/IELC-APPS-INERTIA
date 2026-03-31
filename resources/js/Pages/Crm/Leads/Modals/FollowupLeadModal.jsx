@@ -75,6 +75,7 @@ export default function FollowupLeadModal({
             borderRadius: "0.5rem",
             padding: "2px 0",
         }),
+        menuPortal: base => ({ ...base, zIndex: 20000 })
     };
 
     return (
@@ -130,7 +131,7 @@ export default function FollowupLeadModal({
                  followupForm.data.lead_status_id !== 'c0a80101-0000-0000-0000-000000000004' &&
                  followupForm.data.lead_status_id !== 'c0a80101-0000-0000-0000-000000000007' && (
                     <div>
-                        <InputLabel htmlFor="scheduled_at" value="Next Schedule" />
+                        <InputLabel htmlFor="scheduled_at" value="Next Schedule Follow Up" />
                         <div className="mt-1">
                             <TextInput
                                 id="scheduled_at"
@@ -169,6 +170,7 @@ export default function FollowupLeadModal({
                                 }
                                 placeholder="-- Pilih Paket Pendaftaran --"
                                 isClearable
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                                 className="w-full"
                             />
                         </div>
@@ -197,6 +199,7 @@ export default function FollowupLeadModal({
                                     placeholder="-- Pilih Paket --"
                                     isClearable
                                     className="w-full"
+                                    menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                                 />
                             </div>
                         </div>

@@ -20,9 +20,14 @@ class LeadDetailResource extends JsonResource
             'phone' => $this->phone,
             'email' => $this->email,
             'address' => $this->address,
-            'dob' => $this->dob ? $this->dob->format('d M Y') : null,
-            'status' => $this->status,
+            'dob' => $this->dob, // Raw date for input
+            'dob_formatted' => $this->dob ? $this->dob->format('d M Y') : null,
             'notes' => $this->notes,
+            'lead_status_id' => $this->lead_status_id,
+            'branch_id' => $this->branch_id,
+            'lead_source_id' => $this->lead_source_id,
+            'interest_level_id' => $this->interest_level_id,
+            'interest_package_id' => $this->interest_package_id,
             'parent_name' => $this->parent_name,
             'parent_phone' => $this->parent_phone,
             'temperature' => $this->temperature,
@@ -36,7 +41,7 @@ class LeadDetailResource extends JsonResource
             'created_at' => $this->created_at->format('d M Y, H:i'),
             'branch' => $this->whenLoaded('branch', fn() => $this->branch->name),
             'interest_package' => $this->whenLoaded('interestPackage', fn() => $this->interestPackage?->name),
-            'lead_source' => $this->whenLoaded('leadSource', fn() => $this->leadSource?->name),
+            'source' => $this->whenLoaded('leadSource', fn() => $this->leadSource?->name),
 
             'activities' => $this->whenLoaded('activities', function () {
                 return $this->activities->map(function ($activity) {

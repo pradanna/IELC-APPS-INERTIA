@@ -78,7 +78,9 @@ export default function ClassPlacementModal({
 
                     {purchasedPackages.map((item) => {
                         const classes = availableClassesByPackage[item.package_name] || [];
-                        const options = classes.map(c => ({ value: c.id, label: c.name }));
+                        const options = classes
+                            .filter(c => c.branch_id === student.branch_id)
+                            .map(c => ({ value: c.id, label: c.name }));
 
                         return (
                             <div key={item.id} className="p-4 rounded-xl border border-gray-100 bg-white shadow-sm ring-1 ring-gray-900/5">
@@ -99,7 +101,7 @@ export default function ClassPlacementModal({
                                         isClearable
                                         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                                         styles={{
-                                            menuPortal: base => ({ ...base, zIndex: 9999 }),
+                                            menuPortal: base => ({ ...base, zIndex: 20000 }),
                                             control: (base) => ({
                                                 ...base,
                                                 borderRadius: '0.625rem',

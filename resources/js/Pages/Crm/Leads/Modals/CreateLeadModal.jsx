@@ -5,7 +5,8 @@ import InputLabel from "@/Components/ui/InputLabel";
 import TextInput from "@/Components/form/TextInput";
 import TextArea from "@/Components/ui/TextArea";
 import Select from "react-select";
-import ReactDatePicker from "react-datepicker";
+import DatePicker from "@/Components/form/DatePicker";
+
 import { toTitleCase } from "@/lib/utils";
 
 export default function CreateLeadModal({
@@ -65,6 +66,7 @@ export default function CreateLeadModal({
             borderRadius: "0.5rem",
             padding: "2px 0",
         }),
+        menuPortal: (base) => ({ ...base, zIndex: 20000 }),
     };
 
     return (
@@ -139,29 +141,12 @@ export default function CreateLeadModal({
 
                     <div>
                         <InputLabel htmlFor="create_dob">Date of Birth</InputLabel>
-                        <ReactDatePicker
+                        <DatePicker
                             id="create_dob"
-                            selected={
-                                createForm.data.dob
-                                    ? new Date(createForm.data.dob)
-                                    : null
-                            }
-                            onChange={(date) => {
-                                const formattedDate = date
-                                    ? new Date(
-                                          date.getTime() -
-                                              date.getTimezoneOffset() * 60000
-                                      )
-                                          .toISOString()
-                                          .split("T")[0]
-                                    : null;
-                                createForm.setData("dob", formattedDate);
-                            }}
-                            dateFormat="dd/MM/yyyy"
-                            className="mt-1 block w-full rounded-lg border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
-                            showYearDropdown
-                            showMonthDropdown
-                            dropdownMode="select"
+                            value={createForm.data.dob}
+                            onChange={(date) => createForm.setData("dob", date)}
+                            placeholder="Select birthday"
+                            minYear={1950}
                         />
                     </div>
 
@@ -244,6 +229,7 @@ export default function CreateLeadModal({
                                 placeholder="Select Branch"
                                 isClearable
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                             {createForm.errors.branch_id && (
                                 <p className="mt-1 text-xs text-red-600">
@@ -273,6 +259,7 @@ export default function CreateLeadModal({
                                 placeholder="Select Source"
                                 isClearable
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                         </div>
                     </div>
@@ -294,6 +281,7 @@ export default function CreateLeadModal({
                                 placeholder="Select Level"
                                 isClearable
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                         </div>
                     </div>
@@ -315,6 +303,7 @@ export default function CreateLeadModal({
                                 placeholder="Select Package"
                                 isClearable
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                         </div>
                     </div>
@@ -340,6 +329,7 @@ export default function CreateLeadModal({
                                     createForm.setData("temperature", opt ? opt.value : "warm")
                                 }
                                 className="w-full"
+                                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                             />
                         </div>
                     </div>

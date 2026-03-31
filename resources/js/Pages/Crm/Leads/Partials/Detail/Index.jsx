@@ -11,10 +11,15 @@ export default function LeadDetailPanel({
     open,
     onClose,
     leadStatuses = [],
+    branches = [],
+    leadSources = [],
+    levels = [],
+    packages = [],
     onStatusUpdate,
     onFollowupClick,
     onEditClick,
     onReviewProfile,
+    onRefresh,
 }) {
     const [activeTab, setActiveTab] = useState("details");
 
@@ -159,11 +164,12 @@ export default function LeadDetailPanel({
                                                         Details
                                                     </button>
                                                     <button
-                                                        onClick={() =>
-                                                            setActiveTab(
-                                                                "history",
-                                                            )
-                                                        }
+                                                        onClick={() => {
+                                                            setActiveTab("history");
+                                                            if (onRefresh && lead?.id) {
+                                                                onRefresh(lead.id);
+                                                            }
+                                                        }}
                                                         className={`whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors ${
                                                             activeTab ===
                                                             "history"
@@ -204,9 +210,11 @@ export default function LeadDetailPanel({
                                                 {activeTab === "history" && (
                                                     <History
                                                         lead={lead}
-                                                        leadStatuses={
-                                                            leadStatuses
-                                                        }
+                                                        leadStatuses={leadStatuses}
+                                                        branches={branches}
+                                                        leadSources={leadSources}
+                                                        levels={levels}
+                                                        packages={packages}
                                                     />
                                                 )}
 

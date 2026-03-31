@@ -7,17 +7,30 @@ use Illuminate\Support\Collection;
 
 class ExportLeadsAction
 {
-    public function execute($user, ?string $search = null)
+    public function execute($user, array $filters = [])
     {
         $query = Lead::query();
 
-        // Multi-branch Isolation (Sama seperti di method index)
+        // Multi-branch Isolation (Frontdesk only sees their branch leads)
         if ($user->role === 'frontdesk' && $user->frontdesk) {
             $query->where('branch_id', $user->frontdesk->branch_id);
+        } else if (isset($filters['branch_id']) && $filters['branch_id'] !== 'all') {
+            $query->where('branch_id', $filters['branch_id']);
+        }
+
+        // Filter by Month & Year
+        if (isset($filters['month']) && isset($filters['year'])) {
+            $query->whereMonth('created_at', $filters['month'])->whereYear('created_at', $filters['year']);
+        }
+
+        // Filter by Lead Source
+        if (isset($filters['lead_source_id']) && $filters['lead_source_id'] !== 'all') {
+            $query->where('lead_source_id', $filters['lead_source_id']);
         }
 
         // Filter by search query jika ada
-        if ($search) {
+        if (isset($filters['search']) && !empty($filters['search'])) {
+            $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%");

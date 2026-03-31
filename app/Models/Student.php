@@ -12,6 +12,7 @@ class Student extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'lead_id',
         'nis',
         'status',
@@ -28,5 +29,20 @@ class Student extends Model
     public function studyClasses(): BelongsToMany
     {
         return $this->belongsToMany(StudyClass::class, 'student_study_class')->withTimestamps();
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function scores()
+    {
+        return $this->hasMany(StudentScore::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 }
