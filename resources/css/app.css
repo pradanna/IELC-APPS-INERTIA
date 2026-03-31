@@ -50,4 +50,6 @@
     /* Miscellaneous */
     --color-dark: #1f2937;
     --color-light: #f3f4f6;
+
+    --spacing-7xl: 80rem;
 }

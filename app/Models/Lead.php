@@ -6,10 +6,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Lead extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -26,9 +29,14 @@ class Lead extends Model
         'parent_name',
         'parent_phone',
         'lead_source_id',
-        'status',
+        'lead_status_id',
         'notes',
+        'pending_profile_data',
+        'is_profile_pending',
         'interest_level_id',
+        'interest_package_id',
+        'temperature',
+        'joined_at',
     ];
 
     /**
@@ -38,6 +46,9 @@ class Lead extends Model
      */
     protected $casts = [
         'dob' => 'date',
+        'joined_at' => 'datetime',
+        'pending_profile_data' => 'array',
+        'is_profile_pending' => 'boolean',
     ];
 
     /**
@@ -57,6 +68,14 @@ class Lead extends Model
     }
 
     /**
+     * Get the package the lead is interested in.
+     */
+    public function interestPackage(): BelongsTo
+    {
+        return $this->belongsTo(Package::class, 'interest_package_id');
+    }
+
+    /**
      * Get the source of the lead.
      */
     public function leadSource(): BelongsTo
@@ -65,14 +84,54 @@ class Lead extends Model
     }
 
     /**
-     * Scope a query to only include leads with a specific status.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $status
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Get the status of the lead.
      */
-    public function scopeStatus(Builder $query, string $status): Builder
+    public function leadStatus(): BelongsTo
     {
-        return $query->where('status', $status);
+        return $this->belongsTo(LeadStatus::class);
+    }
+
+
+    /**
+     * Get the follow-ups for the lead.
+     */
+    public function followups()
+    {
+        // Sesuaikan 'LeadFollowup::class' dengan nama model follow-up Anda jika berbeda
+        return $this->hasMany(\App\Models\LeadFollowup::class);
+    }
+
+    /**
+     * Get the options for the activity log.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            // Tentukan secara spesifik field yang penting untuk di-log perubahannya
+            ->logOnly(['lead_status_id', 'branch_id', 'name', 'phone', 'lead_source_id', 'notes'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Lead has been {$eventName}");
+    }
+
+    /**
+     * Get the placement test sessions for the lead.
+     */
+    public function ptSessions(): HasMany
+    {
+        return $this->hasMany(PtSession::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * Get the student record associated with the lead.
+     */
+    public function student(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Student::class);
     }
 }

@@ -1,7 +1,7 @@
 # [SYSTEM_PROMPT]
 
 ROLE: Expert Full-Stack Developer (Laravel 12 + React + Inertia.js + Tailwind CSS v4).
-PROJECT: "IELC-APPS" (Multi-branch Language Course Management System & CRM).
+PROJECT: "IELC-APPS" (Multi-branch Language Course Management System & Crm).
 CORE_LOCATIONS: "Solo", "Semarang".
 
 # [ARCHITECTURE_RULES: BACKEND (LARAVEL)]
@@ -22,6 +22,7 @@ CORE_LOCATIONS: "Solo", "Semarang".
 6. STRICT_ROUTING_SAFETY:
     - `routes/web.php` MUST ONLY contain route definitions using array syntax: `[ControllerName::class, 'methodName']`.
     - STRICTLY PROHIBITED: Using closures `function() {}`, executing database queries, or placing conditional business logic inside route files.
+    - ROUTE_REFRESHING: HARUS selalu mengeksekusi perintah `php artisan optimize` setelah membuat perubahan di dalam file `routes/web.php` agar *cache routing* segar kembali.
 
 # [ARCHITECTURE_RULES: FRONTEND (REACT/INERTIA)]
 
@@ -30,12 +31,22 @@ CORE_LOCATIONS: "Solo", "Semarang".
     - `resources/js/Components/`: Reusable UI elements (Buttons, Inputs).
     - `resources/js/Layouts/`: Layout wrappers.
     - Page-Specific Components: Extract complex UI into a `Partials` folder located exactly one level next to the main page file (e.g., if page is `Pages/Crm/Leads/Index.jsx`, partials go to `Pages/Crm/Leads/Partials/LeadTable.jsx`).
+    - Page-Specific Modals: Modals MUST be placed in its own `Modals` folder next to the main page file (e.g., `Pages/Crm/Leads/Modals/CreateLeadModal.jsx`).
     - CRITICAL: NEVER use wildcards for path generation. NEVER nest folders with the same name (e.g., /Superadmin/Superadmin/).
 2. STATE_MANAGEMENT:
     - Rely on Inertia's `useForm` for all mutations (POST, PUT, DELETE).
     - Use standard React Hooks (`useState`, `useEffect`) strictly for local UI state.
 
-3. COMPONENT-FIRST WORKFLOW (DRY PRINCIPLE): - When generating a new UI page, you MUST evaluate if the UI requires standard elements (e.g., Data Tables, Pagination, Modals, Status Badges). - If these reusable components do not exist yet, you MUST generate the code for them FIRST inside `resources/js/Components/` before writing the main Page file. - NEVER hardcode massive HTML structures (like raw `<table>` or repetitive `<form>` inputs) directly inside the main Page. Extract them to global `Components/` or page-specific `Partials/`.
+3. COMPONENT-FIRST WORKFLOW (DRY PRINCIPLE):
+    - When generating a new UI page, you MUST evaluate if the UI requires standard elements (e.g., Data Tables, Pagination, Modals, Status Badges).
+    - If these reusable components do not exist yet, you MUST generate the code for them FIRST inside `resources/js/Components/` before writing the main Page file.
+    - NEVER hardcode massive HTML structures (like raw `<table>` or repetitive `<form>` inputs) directly inside the main Page. Extract them to global `Components/` or page-specific `Partials/`.
+
+4. SEPARATION_OF_CONCERNS (HOOKS_FOR_LOGIC):
+    - JSX files MUST remain thin and focused on data presentation (declarative UI).
+    - ALL complex logic, modal state management, and event handlers MUST be extracted into custom hooks.
+    - Hooks should be located in a `Hooks` folder next to the page or component (e.g., `Pages/Crm/Leads/Hooks/useLeadModals.js`).
+    - This keeps components clean, testable, and reusable.
 
 # [UI_UX_STANDARDS: TAILWIND CSS v4 (HIGH-DENSITY & COMPACT)]
 
@@ -72,7 +83,7 @@ The `users.role` column dictates user permissions. The application must enforce 
         - Read-only access to their assigned branch data.
         - CRUD operations on `leads` and `students` within their branch.
         - Can register new students and manage lead statuses.
-    - **Typical Use Cases**: Daily branch operations, managing customer relationships (CRM), student registration.
+    - **Typical Use Cases**: Daily branch operations, managing customer relationships (Crm), student registration.
 
 - **`teacher`**:
     - **Scope**: Limited to their own data and assigned entities (e.g., students in their classes).
@@ -304,10 +315,204 @@ This section documents the database schema based on the Laravel migration files.
 | `source`              | `varchar(255)`       | Nullable. e.g., 'Instagram', 'Walk-in'                     |
 | `status`              | `enum`               | 'new', 'contacted', ..., 'lost'. Default: 'new'            |
 | `notes`               | `text`               | Nullable                                                   |
+| `lead_status_id`      | `char(36)`, `uuid`   | Foreign Key (`lead_statuses.id`), Default: '0ca51d27-...'  |
 | `interest_level_id`   | `bigint`, `unsigned` | Nullable, Foreign Key (`levels.id`), On Delete: Set Null   |
 | `interest_package_id` | `bigint`, `unsigned` | Nullable, Foreign Key (`packages.id`), On Delete: Set Null |
 | `created_at`          | `timestamp`          | Nullable                                                   |
 | `updated_at`          | `timestamp`          | Nullable                                                   |
+
+### `monthly_targets`
+
+| Column            | Type                 | Details                                         |
+| ----------------- | -------------------- | ----------------------------------------------- |
+| `id`              | `bigint`, `unsigned` | Primary Key                                     |
+| `branch_id`       | `bigint`, `unsigned` | Foreign Key (`branches.id`), On Delete: Cascade |
+| `month`           | `tinyint`            |                                                 |
+| `year`            | `year`               |                                                 |
+| `target_enrolled` | `integer`            |                                                 |
+| `created_at`      | `timestamp`          | Nullable                                        |
+| `updated_at`      | `timestamp`          | Nullable                                        |
+
+### `lead_sources`
+
+| Column       | Type                 | Details     |
+| ------------ | -------------------- | ----------- |
+| `id`         | `bigint`, `unsigned` | Primary Key |
+| `name`       | `varchar(255)`       |             |
+| `created_at` | `timestamp`          | Nullable    |
+| `updated_at` | `timestamp`          | Nullable    |
+
+### `lead_statuses`
+
+| Column        | Type                 | Details     |
+| ------------- | -------------------- | ----------- |
+| `id`          | `char(36)`, `uuid`   | Primary Key |
+| `name`        | `varchar(255)`       |             |
+| `description` | `text`               | Nullable    |
+| `text_color`  | `varchar(255)`       |             |
+| `bg_color`    | `varchar(255)`       |             |
+| `created_at`  | `timestamp`          | Nullable    |
+| `updated_at`  | `timestamp`          | Nullable    |
+
+### `lead_followups`
+
+| Column         | Type                 | Details                                                    |
+| -------------- | -------------------- | ---------------------------------------------------------- |
+| `id`           | `bigint`, `unsigned` | Primary Key                                                |
+| `lead_id`      | `bigint`, `unsigned` | Foreign Key (`leads.id`), On Delete: Cascade               |
+| `scheduled_at` | `datetime`           | Nullable                                                   |
+| `method`       | `enum`               | 'whatsapp', 'call', 'email', 'meeting'. Default: whatsapp  |
+| `status`       | `enum`               | 'pending', 'completed', 'cancelled'. Default: pending      |
+| `notes`        | `text`               | Nullable                                                   |
+| `user_id`      | `bigint`, `unsigned` | Foreign Key (`users.id`)                                   |
+| `created_at`   | `timestamp`          | Nullable                                                   |
+| `updated_at`   | `timestamp`          | Nullable                                                   |
+
+### `pt_exams`
+
+| Column             | Type        | Details       |
+| ------------------ | ----------- | ------------- |
+| `id`               | `char(36)`, `uuid` | Primary Key   |
+| `title`            | `varchar(255)` |               |
+| `description`      | `text`      | Nullable      |
+| `duration_minutes` | `integer`   | Default: 60   |
+| `is_active`        | `boolean`   | Default: true |
+| `created_at`       | `timestamp` | Nullable      |
+| `updated_at`       | `timestamp` | Nullable      |
+
+### `pt_questions`
+
+| Column          | Type        | Details                                              |
+| --------------- | ----------- | ---------------------------------------------------- |
+| `id`            | `char(36)`, `uuid` | Primary Key                                          |
+| `pt_exam_id`    | `char(36)`, `uuid` | Foreign Key (`pt_exams.id`), On Delete: Cascade      |
+| `pt_question_group_id` | `char(36)`, `uuid` | Nullable, Foreign Key (`pt_question_groups.id`), On Delete: Set Null |
+| `question_text` | `text`      |                                                      |
+| `audio_path`    | `varchar(255)` | Nullable                                             |
+| `points`        | `integer`   | Default: 1                                           |
+| `created_at`    | `timestamp` | Nullable                                             |
+| `updated_at`    | `timestamp` | Nullable                                             |
+
+### `pt_question_options`
+
+| Column           | Type        | Details                                                 |
+| ---------------- | ----------- | ------------------------------------------------------- |
+| `id`             | `char(36)`, `uuid` | Primary Key                                             |
+| `pt_question_id` | `char(36)`, `uuid` | Foreign Key (`pt_questions.id`), On Delete: Cascade     |
+| `option_text`    | `varchar(255)` |                                                         |
+| `is_correct`     | `boolean`   | Default: false                                          |
+| `created_at`     | `timestamp` | Nullable                                                |
+| `updated_at`     | `timestamp` | Nullable                                                |
+
+### `pt_sessions`
+
+| Column              | Type        | Details                                              |
+| ------------------- | ----------- | ---------------------------------------------------- |
+| `id`                | `char(36)`, `uuid` | Primary Key                                          |
+| `lead_id`           | `bigint`, `unsigned` | Foreign Key (`leads.id`), On Delete: Cascade    |
+| `pt_exam_id`        | `char(36)`, `uuid` | Foreign Key (`pt_exams.id`), On Delete: Cascade      |
+| `token`             | `varchar(255)` | Unique                                               |
+| `status`            | `enum`      | 'pending', 'in_progress', 'completed'                |
+| `started_at`        | `timestamp` | Nullable                                             |
+| `finished_at`       | `timestamp` | Nullable                                             |
+| `final_score`       | `integer`   | Nullable                                             |
+| `recommended_level` | `varchar(255)` | Nullable                                             |
+| `created_at`        | `timestamp` | Nullable                                             |
+| `updated_at`        | `timestamp` | Nullable                                             |
+
+### `pt_answers`
+
+| Column                  | Type        | Details                                                    |
+| ----------------------- | ----------- | ---------------------------------------------------------- |
+| `id`                    | `char(36)`, `uuid` | Primary Key                                                |
+| `pt_session_id`         | `char(36)`, `uuid` | Foreign Key (`pt_sessions.id`), On Delete: Cascade         |
+| `pt_question_id`        | `char(36)`, `uuid` | Foreign Key (`pt_questions.id`), On Delete: Cascade        |
+| `pt_question_option_id` | `char(36)`, `uuid` | Nullable, Foreign Key (`pt_question_options.id`)           |
+| `is_correct`            | `boolean`   | Default: false                                             |
+| `created_at`            | `timestamp` | Nullable                                                   |
+| `updated_at`            | `timestamp` | Nullable                                                   |
+
+### `pt_question_groups`
+
+| Column         | Type        | Details                                              |
+| -------------- | ----------- | ---------------------------------------------------- |
+| `id`           | `char(36)`, `uuid` | Primary Key                                          |
+| `pt_exam_id`   | `char(36)`, `uuid` | Foreign Key (`pt_exams.id`), On Delete: Cascade      |
+| `instruction`  | `varchar(255)` |                                                      |
+| `audio_path`   | `varchar(255)` | Nullable                                             |
+| `reading_text` | `text`      | Nullable                                             |
+| `created_at`   | `timestamp` | Nullable                                             |
+| `updated_at`   | `timestamp` | Nullable                                             |
+
+### `invoices`
+
+| Column           | Type                 | Details                                                    |
+| ---------------- | -------------------- | ---------------------------------------------------------- |
+| `id`             | `bigint`, `unsigned` | Primary Key                                                |
+| `lead_id`        | `bigint`, `unsigned` | Foreign Key (`leads.id`), On Delete: Cascade               |
+| `invoice_number` | `varchar(255)`       | Unique                                                     |
+| `total_amount`   | `decimal(12, 2)`     | Default: 0                                                 |
+| `status`         | `enum`               | 'unpaid', 'partial', 'waiting_verification', ...           |
+| `due_date`       | `date`               | Nullable                                                   |
+| `paid_at`        | `timestamp`          | Nullable                                                   |
+| `created_at`     | `timestamp`          | Nullable                                                   |
+| `updated_at`     | `timestamp`          | Nullable                                                   |
+
+### `invoice_items`
+
+| Column         | Type                 | Details                                            |
+| -------------- | -------------------- | -------------------------------------------------- |
+| `id`           | `bigint`, `unsigned` | Primary Key                                        |
+| `invoice_id`   | `bigint`, `unsigned` | Foreign Key (`invoices.id`), On Delete: Cascade    |
+| `description`  | `varchar(255)`       |                                                    |
+| `quantity`     | `integer`            | Default: 1                                         |
+| `unit_price`   | `decimal(12, 2)`     | Default: 0                                         |
+| `subtotal`     | `decimal(12, 2)`     | Default: 0                                         |
+| `created_at`   | `timestamp`          | Nullable                                           |
+| `updated_at`   | `timestamp`          | Nullable                                           |
+
+### `payments`
+
+| Column           | Type                 | Details                                            |
+| ---------------- | -------------------- | -------------------------------------------------- |
+| `id`             | `bigint`, `unsigned` | Primary Key                                        |
+| `invoice_id`     | `bigint`, `unsigned` | Foreign Key (`invoices.id`), On Delete: Cascade    |
+| `amount_paid`    | `decimal(12, 2)`     | Default: 0                                         |
+| `payment_method` | `varchar(255)`       | Nullable                                           |
+| `payment_date`   | `timestamp`          | Default: CURRENT_TIMESTAMP                         |
+| `receipt_path`   | `varchar(255)`       | Nullable                                           |
+| `created_at`     | `timestamp`          | Nullable                                           |
+| `updated_at`     | `timestamp`          | Nullable                                           |
+
+### `study_classes`
+
+| Column       | Type                 | Details                                            |
+| ------------ | -------------------- | -------------------------------------------------- |
+| `id`         | `bigint`, `unsigned` | Primary Key                                        |
+| `name`       | `varchar(255)`       |                                                    |
+| `package_id` | `bigint`, `unsigned` | Foreign Key (`packages.id`), On Delete: Cascade    |
+| `created_at` | `timestamp`          | Nullable                                           |
+| `updated_at` | `timestamp`          | Nullable                                           |
+
+### `study_class_teacher` (Pivot Table)
+
+| Column           | Type                 | Details                                                |
+| ---------------- | -------------------- | ------------------------------------------------------ |
+| `id`             | `bigint`, `unsigned` | Primary Key                                            |
+| `study_class_id` | `bigint`, `unsigned` | Foreign Key (`study_classes.id`), On Delete: Cascade   |
+| `teacher_id`     | `bigint`, `unsigned` | Foreign Key (`users.id`), On Delete: Cascade           |
+| `created_at`     | `timestamp`          | Nullable                                               |
+| `updated_at`     | `timestamp`          | Nullable                                               |
+
+### `student_study_class` (Pivot Table)
+
+| Column           | Type                 | Details                                                |
+| ---------------- | -------------------- | ------------------------------------------------------ |
+| `id`             | `bigint`, `unsigned` | Primary Key                                            |
+| `student_id`     | `bigint`, `unsigned` | Foreign Key (`students.id`), On Delete: Cascade        |
+| `study_class_id` | `bigint`, `unsigned` | Foreign Key (`study_classes.id`), On Delete: Cascade   |
+| `created_at`     | `timestamp`          | Nullable                                               |
+| `updated_at`     | `timestamp`          | Nullable                                               |
 
 # [EXECUTION_DIRECTIVE]
 

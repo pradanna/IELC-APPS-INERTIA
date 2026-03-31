@@ -1,6 +1,13 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 
-export default function Modal({ show, onClose, title, children }) {
+export default function Modal({
+    show,
+    onClose,
+    title,
+    maxWidth = "lg",
+    children,
+}) {
     useEffect(() => {
         if (show) {
             document.body.style.overflow = "hidden";
@@ -14,9 +21,23 @@ export default function Modal({ show, onClose, title, children }) {
 
     if (!show) return null;
 
-    return (
+    const maxWidthClass =
+        {
+            sm: "sm:max-w-sm",
+            md: "sm:max-w-md",
+            lg: "sm:max-w-lg",
+            xl: "sm:max-w-xl",
+            "2xl": "sm:max-w-2xl",
+            "3xl": "sm:max-w-3xl",
+            "4xl": "sm:max-w-4xl",
+            "5xl": "sm:max-w-5xl",
+            "6xl": "sm:max-w-6xl",
+            "7xl": "sm:max-w-7xl",
+        }[maxWidth] || "sm:max-w-lg";
+
+    return createPortal(
         <div
-            className="fixed inset-0 z-50 overflow-y-auto"
+            className="fixed inset-0 z-[10000] overflow-y-auto"
             aria-labelledby="modal-title"
             role="dialog"
             aria-modal="true"
@@ -30,7 +51,9 @@ export default function Modal({ show, onClose, title, children }) {
 
             {/* Modal Panel */}
             <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div className="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl ring-1 ring-gray-900/5 transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div
+                    className={`relative transform overflow-visible rounded-xl bg-white text-left shadow-2xl ring-1 ring-gray-900/5 transition-all sm:my-8 sm:w-full ${maxWidthClass}`}
+                >
                     {/* Header */}
                     {title && (
                         <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-3 sm:px-6">
@@ -46,6 +69,7 @@ export default function Modal({ show, onClose, title, children }) {
                     <div className="px-4 py-5 sm:p-6">{children}</div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

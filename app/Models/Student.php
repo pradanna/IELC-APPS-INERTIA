@@ -5,49 +5,44 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Student extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_id',
-        'branch_id',
-        'name',
-        'dob',
-        'phone',
-        'address',
-        'parent_name',
-        'parent_phone',
+        'lead_id',
+        'nis',
+        'status',
+        'profile_picture',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'dob' => 'date',
-    ];
+    // Relasi ke data prospek / profil awal siswa
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class);
+    }
 
-    /**
-     * Get the user that owns the student profile.
-     */
+    // Relasi Many-to-Many ke kelas yang diikuti siswa
+    public function studyClasses(): BelongsToMany
+    {
+        return $this->belongsToMany(StudyClass::class, 'student_study_class')->withTimestamps();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the branch where the student is registered.
-     */
-    public function branch(): BelongsTo
+    public function scores()
     {
-        return $this->belongsTo(Branch::class);
+        return $this->hasMany(StudentScore::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 }

@@ -2,10 +2,10 @@ import { Home, Users, UserPlus, Briefcase } from "lucide-react";
 import React from "react";
 
 const iconMap = {
-    "Total Branches": <Home size={24} className="text-gray-400" />,
-    "Total Teachers": <Users size={24} className="text-gray-400" />,
-    "Total Students": <UserPlus size={24} className="text-gray-400" />,
-    "Total Leads": <Briefcase size={24} className="text-gray-400" />,
+    "Total Branches": <Home size={20} className="text-blue-500" />,
+    "Total Teachers": <Users size={20} className="text-indigo-500" />,
+    "Total Students": <UserPlus size={20} className="text-emerald-500" />,
+    "New Leads (This Month)": <Briefcase size={20} className="text-amber-500" />,
 };
 
 

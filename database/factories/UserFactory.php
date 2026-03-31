@@ -41,10 +41,10 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'uuid' => (string) Str::uuid(),
             'remember_token' => Str::random(10),
             // The 'role' is set in the migration by default,
             // we will override it in the seeder for specific user types.

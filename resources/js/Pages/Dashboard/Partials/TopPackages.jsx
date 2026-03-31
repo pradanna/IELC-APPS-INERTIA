@@ -1,56 +1,71 @@
 import React from 'react';
+import { Package, TrendingUp, Award } from 'lucide-react';
 
-const topPackagesData = [
-    {
-        name: 'Group Kids A (Beginner)',
-        level: 'Kids',
-        price: 1500000,
-        students: 78,
-    },
-    {
-        name: 'IELTS Intensive',
-        level: 'Exam Prep',
-        price: 3250000,
-        students: 45,
-    },
-    {
-        name: 'General English (Private)',
-        level: 'Adult',
-        price: 4500000,
-        students: 32,
-    },
-];
-
-export default function TopPackages() {
+export default function TopPackages({ data = [] }) {
     return (
-        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">Top Performing Packages</h3>
+        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 uppercase tracking-tighter">
+                        <Package size={18} className="text-primary-600" />
+                        Top Performing Packages
+                    </h2>
+                    <p className="text-xs text-gray-400 mt-1 uppercase font-semibold">Highest cumulative enrollments</p>
+                </div>
+                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                    <Award size={20} />
+                </div>
+            </div>
+
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-4 py-3 font-medium">Package Name</th>
-                            <th scope="col" className="px-4 py-3 font-medium">Price</th>
-                            <th scope="col" className="px-4 py-3 font-medium text-right">Students Enrolled</th>
+                <table className="w-full text-sm text-left">
+                    <thead>
+                        <tr className="border-b border-gray-100">
+                            <th scope="col" className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Paket & Type</th>
+                            <th scope="col" className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Base Price</th>
+                            <th scope="col" className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Siswa Terdaftar</th>
+                            <th scope="col" className="px-4 py-3 text-right"></th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {topPackagesData.map((pkg) => (
-                            <tr key={pkg.name} className="bg-white border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                                <th scope="row" className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
-                                    {pkg.name}
-                                    <p className="text-xs text-gray-500 font-normal">{pkg.level}</p>
-                                </th>
-                                <td className="px-4 py-3">
-                                    {pkg.price.toLocaleString('id-ID', {
-                                        style: 'currency',
-                                        currency: 'IDR',
-                                        minimumFractionDigits: 0,
-                                    })}
+                    <tbody className="divide-y divide-gray-50 uppercase tracking-tight">
+                        {data.length > 0 ? (
+                            data.map((pkg, index) => (
+                                <tr key={index} className="group hover:bg-gray-50/50 transition-colors">
+                                    <th scope="row" className="px-4 py-4 pr-10 whitespace-nowrap">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                                                {index + 1}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-gray-900 leading-none">{pkg.name}</p>
+                                                <p className="text-[10px] text-gray-400 font-bold mt-1 tracking-widest">MASTER PACKAGE</p>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                        <span className="text-sm font-semibold text-gray-700">{pkg.price}</span>
+                                    </td>
+                                    <td className="px-4 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <span className="text-sm font-bold text-gray-900">{pkg.sales}</span>
+                                            <span className="text-[11px] font-bold text-gray-500">SISWA</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="p-1 px-2 bg-green-50 text-green-600 rounded-md text-[10px] font-bold flex items-center gap-1 ml-auto w-fit">
+                                            <TrendingUp size={12} />
+                                            TOP SELL
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="4" className="py-10 text-center text-gray-400 italic text-sm">
+                                    Belum ada data penjualan paket kursus.
                                 </td>
-                                <td className="px-4 py-3 text-right font-semibold text-gray-900">{pkg.students}</td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
             </div>

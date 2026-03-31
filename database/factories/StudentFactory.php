@@ -16,13 +16,13 @@ class StudentFactory extends Factory
      */
     public function definition(): array
     {
+        $branchId = \App\Models\Branch::pluck('id')->random() ?? \App\Models\Branch::factory();
+
         return [
-            'name' => fake()->name(),
-            'dob' => fake()->dateTimeBetween('-20 years', '-7 years'),
-            'phone' => fake()->phoneNumber(),
-            'address' => fake()->address(),
-            'parent_name' => fake()->name('female'),
-            'parent_phone' => fake()->phoneNumber(),
+            'user_id' => \App\Models\User::factory()->state(['role' => 'student']),
+            'lead_id' => \App\Models\Lead::factory()->state(['branch_id' => $branchId]),
+            'nis' => fake()->unique()->numerify('11200####'),
+            'status' => 'active',
         ];
     }
 }

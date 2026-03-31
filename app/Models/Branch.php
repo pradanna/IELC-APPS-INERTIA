@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Branch extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
     /**
      * The attributes that are mass assignable.
@@ -31,11 +33,19 @@ class Branch extends Model
     }
 
     /**
-     * Get the students for the branch.
+     * Get the students for the branch through leads.
      */
-    public function students(): HasMany
+    public function students(): HasManyThrough
     {
-        return $this->hasMany(Student::class);
+        return $this->hasManyThrough(Student::class, Lead::class);
+    }
+
+    /**
+     * Get the monthly targets for the branch.
+     */
+    public function monthlyTargets(): HasMany
+    {
+        return $this->hasMany(MonthlyTarget::class);
     }
 
     /**
@@ -44,6 +54,14 @@ class Branch extends Model
     public function leads(): HasMany
     {
         return $this->hasMany(Lead::class);
+    }
+
+    /**
+     * Get the rooms for the branch.
+     */
+    public function rooms(): HasMany
+    {
+        return $this->hasMany(Room::class);
     }
 
     /**

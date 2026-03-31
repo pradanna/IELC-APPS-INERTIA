@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Card from "./Card";
 import Button from "./Button";
+import Pagination from "./Pagination";
 
 const DataTable = ({
     data = [],
@@ -10,21 +11,28 @@ const DataTable = ({
     filterSection,
     onRowClick,
     isLoading = false,
+    pagination = null,
 }) => {
     const [currentPage, setCurrentPage] = useState(1);
 
     // --- Pagination Logic ---
-    const totalPages = Math.ceil(data.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentData = data.slice(startIndex, endIndex);
+    const isServerSide = !!pagination;
+    const currentData = isServerSide ? data : data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const totalEntries = isServerSide ? (pagination.total || data.length) : data.length;
+    const totalPages = isServerSide ? (pagination.last_page || 1) : Math.ceil(data.length / itemsPerPage);
+    const startIndex = isServerSide ? (pagination.from || 1) : ((currentPage - 1) * itemsPerPage + 1);
+    const endIndex = isServerSide ? (pagination.to || data.length) : Math.min(currentPage * itemsPerPage, data.length);
 
     const handlePrevPage = () => {
-        setCurrentPage((prev) => Math.max(prev - 1, 1));
+        if (!isServerSide) {
+            setCurrentPage((prev) => Math.max(prev - 1, 1));
+        }
     };
 
     const handleNextPage = () => {
-        setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+        if (!isServerSide) {
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+        }
     };
 
     return (
@@ -107,38 +115,41 @@ const DataTable = ({
             </div>
 
             {/* --- Pagination Footer --- */}
-            {data.length > itemsPerPage && (
-                <div className="p-4 flex items-center justify-between text-sm text-gray-600 border-t border-gray-100">
+            {(isServerSide || data.length > itemsPerPage) && (
+                <div className="p-4 flex items-center justify-between text-sm text-gray-600 border-t border-gray-100 bg-white">
                     <span>
                         Showing{" "}
-                        <span className="font-medium">{startIndex + 1}</span> to{" "}
-                        <span className="font-medium">
-                            {Math.min(endIndex, data.length)}
-                        </span>{" "}
-                        of <span className="font-medium">{data.length}</span>{" "}
-                        entries
+                        <span className="font-medium text-gray-900">{startIndex}</span> ke{" "}
+                        <span className="font-medium text-gray-900">{endIndex}</span> dari{" "}
+                        <span className="font-medium text-gray-900">{totalEntries}</span>{" "}
+                        data
                     </span>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={handlePrevPage}
-                            disabled={currentPage === 1}
-                            className="p-2 h-auto"
-                        >
-                            <ChevronLeft size={16} />
-                        </Button>
-                        <span className="text-sm font-medium">
-                            Page {currentPage} of {totalPages}
-                        </span>
-                        <Button
-                            variant="outline"
-                            onClick={handleNextPage}
-                            disabled={currentPage === totalPages}
-                            className="p-2 h-auto"
-                        >
-                            <ChevronRight size={16} />
-                        </Button>
-                    </div>
+                    
+                    {isServerSide ? (
+                        <Pagination links={pagination.links} />
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={handlePrevPage}
+                                disabled={currentPage === 1}
+                                className="p-2 h-auto"
+                            >
+                                <ChevronLeft size={16} />
+                            </Button>
+                            <span className="text-sm font-medium">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                onClick={handleNextPage}
+                                disabled={currentPage === totalPages}
+                                className="p-2 h-auto"
+                            >
+                                <ChevronRight size={16} />
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
