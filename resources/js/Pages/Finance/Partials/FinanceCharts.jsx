@@ -22,9 +22,9 @@ export default function FinanceCharts({ charts }) {
     const COLORS = ["#0ea5e9", "#8b5cf6", "#f59e0b"]; // primary/secondary shades
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 lg:gap-6 min-w-0">
             {/* Line Chart: Tren Pemasukan */}
-            <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5 lg:col-span-2 flex flex-col h-80">
+            <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5 xl:col-span-2 flex flex-col h-80 min-w-0">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">
                     Tren Pemasukan (Bulan Ini)
                 </h3>
@@ -71,7 +71,7 @@ export default function FinanceCharts({ charts }) {
             </div>
 
             {/* Pie Chart: Komposisi Paket */}
-            <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5 flex flex-col h-80">
+            <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5 flex flex-col h-80 min-w-0 xl:col-span-1">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">
                     Pendapatan per Paket
                 </h3>

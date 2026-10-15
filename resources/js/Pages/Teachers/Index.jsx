@@ -34,15 +34,15 @@ export default function Index({ teachers, branches, stats }) {
         <AdminLayout>
             <Head title="Manajemen Pengajar" />
 
-            <div className="space-y-6">
-                <div className="flex justify-between items-end">
+            <div className="space-y-6 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Manajemen Pengajar</h1>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Manajemen Pengajar</h1>
                         <p className="text-sm text-gray-500 mt-1">Kelola profil guru, penempatan cabang, dan jadwal pengajaran.</p>
                     </div>
                     <Button 
                         onClick={handleAdd}
-                        className="bg-primary-600 hover:bg-primary-700 text-white font-bold flex items-center gap-2 px-6 shadow-lg shadow-primary-500/20"
+                        className="bg-primary-600 hover:bg-primary-700 text-white font-bold flex items-center justify-center gap-2 px-5 py-2.5 shadow-md shadow-primary-500/20 shrink-0"
                     >
                         <UserPlus size={18} />
                         Tambah Guru
@@ -51,7 +51,7 @@ export default function Index({ teachers, branches, stats }) {
 
                 {/* Tabs Selection */}
                 <div className="border-b border-gray-200">
-                    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                    <nav className="-mb-px flex space-x-6 sm:space-x-8 overflow-x-auto scrollbar-none" aria-label="Tabs">
                         <button
                             onClick={() => setActiveTab('dashboard')}
                             className={`${

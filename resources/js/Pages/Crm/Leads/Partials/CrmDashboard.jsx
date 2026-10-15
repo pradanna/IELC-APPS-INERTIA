@@ -200,7 +200,7 @@ export default function CrmDashboard({
             </Card>
 
             {/* KPI Overview */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
                 {kpis.map((kpi, idx) => {
                     const Icon = kpi.icon;
                     return (
@@ -211,15 +211,15 @@ export default function CrmDashboard({
                             role="button"
                             tabIndex={0}
                         >
-                            <Card className="flex items-center gap-4 p-5 h-full group-hover:shadow-md transition-all ring-1 ring-transparent hover:ring-primary-500/20">
-                                <div className={`p-3 rounded-xl ${kpi.bg}`}>
-                                    <Icon className={`w-6 h-6 ${kpi.color}`} />
+                            <Card className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-5 h-full group-hover:shadow-md transition-all ring-1 ring-transparent hover:ring-primary-500/20">
+                                <div className={`p-2.5 sm:p-3 rounded-xl shrink-0 ${kpi.bg}`}>
+                                    <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${kpi.color}`} />
                                 </div>
-                                <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider leading-none mb-1">
+                                <div className="min-w-0">
+                                    <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider leading-tight mb-1 truncate">
                                         {kpi.label}
                                     </p>
-                                    <p className="text-2xl font-bold text-gray-900 leading-none">
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-none">
                                         {kpi.value}
                                     </p>
                                 </div>
@@ -229,7 +229,7 @@ export default function CrmDashboard({
                 })}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 lg:gap-6 min-w-0">
                 {/* Urgent Follow-ups Card */}
                 <Card className="p-0 overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-xl bg-white border-0">
                     <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-4 flex items-center justify-between">

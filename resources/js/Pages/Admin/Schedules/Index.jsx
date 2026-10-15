@@ -185,7 +185,7 @@ export default function ScheduleIndex({ filters, rooms, schedules, sessions, bra
         <AdminLayout>
             <Head title="Class Schedule" />
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 min-w-0">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>

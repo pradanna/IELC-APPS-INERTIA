@@ -7,7 +7,7 @@ import { Link } from "@inertiajs/react";
 export default function Frontdesk({ branchName, stats, recentLeads, upcomingFollowups }) {
     return (
         <AdminLayout>
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-bold text-gray-900 leading-tight">
@@ -20,7 +20,7 @@ export default function Frontdesk({ branchName, stats, recentLeads, upcomingFoll
                 {/* KPI Section */}
                 <ExecutiveKpiCards stats={stats} />
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 lg:gap-6 min-w-0">
                     {/* Recent Leads Panel */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="p-4 border-b border-gray-50 flex items-center justify-between">

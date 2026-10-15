@@ -50,7 +50,7 @@ export default function Index({ kpi, pendingStudents, expiringStudents, chartDat
         <AdminLayout>
             <Head title="Students Management" />
 
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
                 {/* Branch Pills */}
                 <div className="flex flex-wrap items-center gap-2 pb-2">
                     <button
@@ -80,14 +80,14 @@ export default function Index({ kpi, pendingStudents, expiringStudents, chartDat
 
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Students Management</h1>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Students Management</h1>
                         <p className="text-sm text-gray-500 mt-1">Manage all students and their class placements.</p>
                     </div>
                 </div>
 
                 {/* Tabs */}
                 <div className="border-b border-gray-200">
-                    <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                    <nav className="-mb-px flex space-x-6 overflow-x-auto scrollbar-none" aria-label="Tabs">
                         <button
                             onClick={() => setActiveTab('dashboard')}
                             className={`${

@@ -487,7 +487,7 @@ export default function Dashboard({ kpis, lists, charts, packages = [] }) {
 
     return (
         <AdminLayout>
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
                 <Head title="Finance Dashboard" />
 
                 {/* Header & Quick Actions */}
@@ -522,7 +522,7 @@ export default function Dashboard({ kpis, lists, charts, packages = [] }) {
 
                 {/* Tabs */}
                 <div className="border-b border-gray-200 mt-2">
-                    <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                    <nav className="-mb-px flex space-x-6 overflow-x-auto scrollbar-none" aria-label="Tabs">
                         <button
                             onClick={() => setActiveTab('dashboard')}
                             className={`${

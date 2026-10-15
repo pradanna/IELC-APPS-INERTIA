@@ -11,6 +11,7 @@ import {
     KanbanSquare,
     Plus,
     Download,
+    BarChart3,
 } from "lucide-react";
 import axios from "axios";
 import { Transition } from "@headlessui/react";
@@ -18,6 +19,7 @@ import { Transition } from "@headlessui/react";
 import CrmDashboard from "./Partials/CrmDashboard";
 import LeadTable from "./Partials/LeadTable";
 import LeadKanban from "./Partials/LeadKanban";
+import LeadsReport from "./Partials/LeadsReport";
 import LeadDetailPanel from "./Partials/Detail";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { useLeadModals } from "./Hooks/useLeadModals";
@@ -73,20 +75,21 @@ export default function Index({
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "table", label: "List View", icon: TableIcon },
         { id: "kanban", label: "Kanban Board", icon: KanbanSquare },
+        { id: "reports", label: "Reports", icon: BarChart3 },
     ];
 
     return (
         <AdminLayout>
             <Head title="CRM Workspace" />
 
-            <div className="px-4 sm:px-6 lg:px-8 w-full space-y-6">
-                <div className="sm:flex sm:items-center sm:justify-between">
+            <div className="w-full space-y-6 min-w-0">
+                <div className="sm:flex sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-xl font-bold leading-7 text-gray-900">CRM Workspace</h1>
                         <p className="mt-1 text-sm text-gray-500">Manage incoming leads and track conversions.</p>
                     </div>
-                    <div className="mt-4 sm:mt-0 sm:flex sm:items-center gap-4">
-                        <div ref={search.searchContainerRef} className="relative rounded-md shadow-sm z-20">
+                    <div className="mt-4 sm:mt-0 flex flex-wrap sm:flex-nowrap items-center gap-3">
+                        <div ref={search.searchContainerRef} className="relative rounded-md shadow-sm z-20 flex-1 sm:w-64">
                             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <Search className="h-4 w-4 text-gray-400" />
                             </div>
@@ -112,8 +115,7 @@ export default function Index({
                             )}
                         </div>
 
-
-                        <button onClick={() => modal.setIsCreateOpen(true)} className="inline-flex items-center gap-x-2 rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600">
+                        <button onClick={() => modal.setIsCreateOpen(true)} className="inline-flex items-center gap-x-2 rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 shrink-0">
                             <Plus className="-ml-0.5 h-4 w-4" />
                             New Lead
                         </button>
@@ -121,7 +123,7 @@ export default function Index({
                 </div>
 
                 <div className="border-b border-gray-200">
-                    <nav className="-mb-px flex space-x-6">
+                    <nav className="-mb-px flex space-x-6 overflow-x-auto scrollbar-none">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
@@ -169,6 +171,17 @@ export default function Index({
                             branches={branches}
                             leadSources={leadSources}
                             filters={filters}
+                        />
+                    </div>
+                </Transition>
+
+                <Transition show={activeTab === "reports"} enter="transition ease-out duration-400 transform" enterFrom="opacity-0 translate-y-4" enterTo="opacity-100 translate-y-0">
+                    <div>
+                        <LeadsReport 
+                            leads={mappedLeads} 
+                            leadSources={leadSources} 
+                            leadStatuses={leadStatuses} 
+                            branches={branches} 
                         />
                     </div>
                 </Transition>

@@ -1,34 +1,48 @@
 import { Link } from "@inertiajs/react";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { useState } from "react";
 import NotificationDropdown from "./NotificationDropdown";
 
-export default function Navbar({ user }) {
+export default function Navbar({ user, onToggleSidebar, sidebarExpanded }) {
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
     return (
-        <nav className="h-16 flex items-center justify-between px-6 bg-white border-b border-gray-200">
-            {/* Search Bar */}
-            <div className="flex-1 max-w-md">
-                <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <Search
-                            className="w-5 h-5 text-gray-400"
-                            aria-hidden="true"
+        <nav className="h-16 flex items-center justify-between px-3.5 sm:px-6 bg-white border-b border-gray-200 sticky top-0 z-30">
+            {/* Left: Sidebar Toggle & Search Bar */}
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 max-w-lg">
+                {onToggleSidebar && (
+                    <button
+                        type="button"
+                        onClick={onToggleSidebar}
+                        className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors focus:outline-none shrink-0"
+                        title={sidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
+                        aria-label="Toggle navigation"
+                    >
+                        <Menu className="w-5 h-5" />
+                    </button>
+                )}
+
+                <div className="flex-1 max-w-xs sm:max-w-sm md:max-w-md">
+                    <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <Search
+                                className="w-4 h-4 text-gray-400"
+                                aria-hidden="true"
+                            />
+                        </span>
+                        <input
+                            type="text"
+                            name="search"
+                            id="search"
+                            className="block w-full rounded-lg focus:outline-none py-2 border-gray-200 pl-9 text-xs sm:text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 bg-gray-50/50 focus:bg-white transition-all"
+                            placeholder="Search everything..."
                         />
-                    </span>
-                    <input
-                        type="text"
-                        name="search"
-                        id="search"
-                        className="block w-full rounded-lg focus:outline-none py-3 border-gray-200 pl-10 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
-                        placeholder="Search everything..."
-                    />
+                    </div>
                 </div>
             </div>
 
             {/* Right side icons */}
-            <div className="flex items-center space-x-5">
+            <div className="flex items-center space-x-3 sm:space-x-5">
                 {user ? (
                     <>
                         <NotificationDropdown user={user} />

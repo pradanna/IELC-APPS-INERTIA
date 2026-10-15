@@ -437,18 +437,18 @@ export default function PlacementTestShow({ auth, exam }) {
         <AdminLayout>
             <Head title={`Kelola Ujian: ${examData?.title || "Paket Ujian"}`} />
 
-            <div className="mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <div className="w-full space-y-6 min-w-0">
                 {/* Header Section */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                         <Link
                             href={route("admin.placement-tests.index")}
-                            className="p-2 text-gray-400 hover:text-gray-600 bg-white rounded-full border border-gray-200 shadow-sm transition-colors"
+                            className="p-2 text-gray-400 hover:text-gray-600 bg-white rounded-full border border-gray-200 shadow-sm transition-colors shrink-0"
                         >
                             <ArrowLeft size={20} />
                         </Link>
                         <div>
-                            <h1 className="text-xl font-bold leading-7 text-gray-900 flex items-center gap-2">
+                            <h1 className="text-lg sm:text-xl font-bold leading-7 text-gray-900 flex items-center gap-2">
                                 {examData?.title || "Detail Paket Ujian"}
                                 {examData?.is_active ? (
                                     <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
@@ -460,13 +460,13 @@ export default function PlacementTestShow({ auth, exam }) {
                                     </span>
                                 )}
                             </h1>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-xs sm:text-sm text-gray-500">
                                 {examData?.description ||
                                     "Kelola soal dan pengaturan untuk paket ujian ini."}
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         <button
                             onClick={() => {
                                 settingsForm.setData({
@@ -478,34 +478,34 @@ export default function PlacementTestShow({ auth, exam }) {
                                 });
                                 setIsSettingsModalOpen(true);
                             }}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
                         >
                             <Settings size={16} /> Pengaturan
                         </button>
                         <button
                             onClick={() => setIsImportModalOpen(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg shadow-sm hover:bg-emerald-100 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg shadow-sm hover:bg-emerald-100 transition-colors"
                         >
                             <Upload size={16} /> Import Excel
                         </button>
                         <button
                             onClick={() => openCreateGroupModal(null)}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 border border-primary-100 rounded-lg shadow-sm hover:bg-primary-100 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-primary-700 bg-primary-50 border border-primary-100 rounded-lg shadow-sm hover:bg-primary-100 transition-colors"
                         >
                             <Plus size={16} /> Tambah Grup Soal
                         </button>
                         <button
                             onClick={() => openCreateQuestionModal(null)}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg shadow-sm hover:bg-primary-700 transition-colors"
                         >
                             <Plus size={16} /> Tambah Soal
                         </button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 lg:gap-6 min-w-0">
                     {/* Kolom Kiri: Daftar Soal */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="xl:col-span-2 space-y-6 min-w-0">
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                                 <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">

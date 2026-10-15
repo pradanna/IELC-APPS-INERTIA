@@ -62,7 +62,7 @@ export default function DashboardTab({ kpi, pendingStudents, expiringStudents, c
             </div>
 
             {/* Lapis Tengah: To-Do Lists */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 lg:gap-6 min-w-0">
                 {/* Tabel Menunggu Penempatan */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full">
                     <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">

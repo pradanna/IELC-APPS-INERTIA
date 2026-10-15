@@ -19,7 +19,7 @@ export default function Index({ sessions, branches, filters }) {
         <AdminLayout>
             <Head title="Attendance Dashboard" />
             
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
                 {/* Header & Filters */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>

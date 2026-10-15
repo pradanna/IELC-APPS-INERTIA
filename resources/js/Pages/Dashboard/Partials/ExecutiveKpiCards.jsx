@@ -10,17 +10,16 @@ const iconMap = {
 
 
 const KpiCard = ({ item }) => {
-
     return (
-        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5">
+        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-4 sm:p-5">
             <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider truncate pr-2">
                     {item.name}
                 </p>
-                {iconMap[item.name]}
+                <div className="shrink-0">{iconMap[item.name]}</div>
             </div>
-            <div className="mt-4 flex items-end justify-between">
-                <p className="text-2xl font-bold text-gray-900">{item.stat}</p>
+            <div className="mt-3 sm:mt-4 flex items-end justify-between">
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">{item.stat}</p>
             </div>
         </div>
     );
@@ -28,7 +27,7 @@ const KpiCard = ({ item }) => {
 
 export default function ExecutiveKpiCards({stats}) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
             {stats.map((item, index) => (
                 <KpiCard key={index} item={item} />
             ))}

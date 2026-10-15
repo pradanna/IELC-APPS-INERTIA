@@ -62,7 +62,7 @@ export default function Index({
     return (
         <AdminLayout>
             <Head title="Master Data" />
-            <div className="px-4 sm:px-6 lg:px-8  pb-0">
+            <div className="w-full min-w-0 pb-0">
                 <h1 className="text-xl font-bold leading-7 text-gray-900 mb-3">
                     Master Data
                 </h1>

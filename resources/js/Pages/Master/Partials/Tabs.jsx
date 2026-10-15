@@ -8,7 +8,7 @@ export default function Tabs({ tabs, initialTab }) {
     return (
         <div>
             <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                <nav className="-mb-px flex space-x-6 overflow-x-auto scrollbar-none" aria-label="Tabs">
                     {tabs.map((tab) => (
                         <button
                             key={tab.name}

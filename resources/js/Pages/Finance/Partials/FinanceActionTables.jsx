@@ -12,9 +12,9 @@ export default function FinanceActionTables({ lists, onProcessPayment }) {
         }).format(val);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 lg:gap-6 min-w-0">
             {/* Table: Butuh Verifikasi Segera */}
-            <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden flex flex-col">
+            <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden flex flex-col min-w-0">
                 <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-4 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-900">
                         Butuh Verifikasi Segera

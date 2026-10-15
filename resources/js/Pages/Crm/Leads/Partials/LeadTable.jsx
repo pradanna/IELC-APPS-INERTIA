@@ -307,51 +307,51 @@ export default function LeadTable({
             title="All Leads"
             description="A list of all the leads in your database including their name, email, phone, and status."
         >
-            <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between w-min-[400px]  ">
-                <div className="flex flex-1  gap-3 ">
-                    <div className="min-w-72">
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap flex-1 items-center gap-2.5 sm:gap-3">
+                    <div className="w-full sm:w-auto flex-1 min-w-[180px] sm:max-w-xs">
                         <SearchInput
                             placeholder="Search by name or phone..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className=""
+                            className="w-full"
                         />
                     </div>
-                    <div className="min-w-50">
+                    <div className="w-full sm:w-auto flex-1 sm:flex-initial min-w-[130px] lg:min-w-[140px]">
                         <Select
                             value={statusFilter}
                             onChange={(val) => setStatusFilter(val)}
                             options={statusOptions}
-                            className="  z-40"
+                            className="z-40"
                         />
                     </div>
-                    <div className="min-w-50">
+                    <div className="w-full sm:w-auto flex-1 sm:flex-initial min-w-[130px] lg:min-w-[140px]">
                         <Select
                             value={sourceFilter}
                             onChange={(val) => setSourceFilter(val)}
                             options={sourceOptions}
-                            className="  z-30"
+                            className="z-30"
                         />
                     </div>
 
-                    <div className="min-w-50">
+                    <div className="w-full sm:w-auto flex-1 sm:flex-initial min-w-[130px] lg:min-w-[140px]">
                         <Select
                             value={followupFilter}
                             onChange={(val) => setFollowupFilter(val)}
                             options={followupOptions}
-                            className="  z-20"
+                            className="z-20"
                         />
                     </div>
-                    <div className="min-w-50">
+                    <div className="w-full sm:w-auto flex-1 sm:flex-initial min-w-[130px] lg:min-w-[140px]">
                         <Select
                             value={temperatureFilter}
                             onChange={(val) => setTemperatureFilter(val)}
                             options={temperatureOptions}
-                            className="  z-10"
+                            className="z-10"
                         />
                     </div>
                 </div>
-                <div className="mt-4 sm:mt-0 flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto">
                     {hasGlobalFilters && (
                         <button
                             type="button"

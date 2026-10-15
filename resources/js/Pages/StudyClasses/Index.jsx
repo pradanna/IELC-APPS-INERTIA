@@ -127,15 +127,15 @@ export default function Index({ studyClasses, packages, teachers, rooms, branche
     };
 
     const filterSection = (
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
-            <div className="w-full md:w-1/3">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 w-full">
+            <div className="w-full lg:w-1/3 min-w-[200px]">
                 <SearchInput 
                     value={searchTerm}
                     onChange={handleSearch}
                     placeholder="Cari nama kelas..."
                 />
             </div>
-            <div className="w-full md:w-2/3 flex flex-col sm:flex-row gap-3">
+            <div className="w-full lg:w-2/3 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                 <div className="flex-1">
                     <ReactSelect 
                         options={packageFilterOptions}
@@ -190,7 +190,7 @@ export default function Index({ studyClasses, packages, teachers, rooms, branche
         <AdminLayout>
             <Head title="Class Management" />
 
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
                 {/* Branch Pills */}
                 <div className="flex flex-wrap items-center gap-2 pb-2">
                     <button
@@ -219,15 +219,15 @@ export default function Index({ studyClasses, packages, teachers, rooms, branche
                 </div>
 
                 {/* Header */}
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight leading-tight">Study Class Management</h1>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight leading-tight">Study Class Management</h1>
                         <p className="text-sm text-gray-500 mt-1">Kelola data ruang kelas belajar, paket belajar, dan pengajar.</p>
                     </div>
                     <div>
                         <Button 
                             onClick={handleCreate}
-                            className="bg-primary-600 text-white hover:bg-primary-700 font-medium px-4 py-2 rounded-lg flex items-center gap-2"
+                            className="bg-primary-600 text-white hover:bg-primary-700 font-medium px-4 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
                         >
                             <Plus size={18} />
                             Tambah Kelas

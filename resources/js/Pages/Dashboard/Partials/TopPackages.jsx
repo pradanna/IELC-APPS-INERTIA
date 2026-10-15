@@ -3,7 +3,7 @@ import { Package, TrendingUp, Award } from 'lucide-react';
 
 export default function TopPackages({ data = [] }) {
     return (
-        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-6">
+        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-5 sm:p-6 min-w-0 overflow-hidden">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 uppercase tracking-tighter">

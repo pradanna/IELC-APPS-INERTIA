@@ -47,7 +47,7 @@ export default function FinanceKpiCards({ kpis, onCardClick }) {
     ];
 
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
             {cards.map((card, idx) => {
                 const Icon = card.icon;
                 return (
@@ -58,20 +58,20 @@ export default function FinanceKpiCards({ kpis, onCardClick }) {
                             onCardClick &&
                             onCardClick(card.id)
                         }
-                        className={`bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-5 flex items-center gap-4 ${
+                        className={`bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-4 sm:p-5 flex items-center gap-4 ${
                             card.clickable
                                 ? "cursor-pointer hover:bg-gray-50 transition-colors"
                                 : ""
                         }`}
                     >
-                        <div className={`p-3 rounded-xl ${card.colors}`}>
+                        <div className={`p-3 rounded-xl shrink-0 ${card.colors}`}>
                             <Icon className="w-6 h-6" />
                         </div>
-                        <div>
-                            <p className="text-xs font-medium text-gray-500 mb-1">
+                        <div className="min-w-0">
+                            <p className="text-xs font-medium text-gray-500 mb-1 truncate">
                                 {card.label}
                             </p>
-                            <p className="text-xl font-bold text-gray-900">
+                            <p className="text-lg sm:text-xl font-bold text-gray-900 truncate">
                                 {card.value}
                             </p>
                         </div>

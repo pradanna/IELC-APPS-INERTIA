@@ -1,32 +1,10 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/Components/ui/table";
-import { Badge } from "@/Components/ui/badge";
-import { Button } from "@/Components/ui/button";
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/Components/ui/pagination";
-import { Tabs, TabsList, TabsTrigger } from "@/Components/ui/tabs";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/Components/ui/dropdown-menu";
+import Card from "@/Components/ui/Card";
+import Badge from "@/Components/ui/Badge";
+import Button from "@/Components/ui/Button";
 import { MoreHorizontal } from "lucide-react";
+
 
 export default function Index({ auth, followUps, filters }) {
     const handleTabChange = (value) => {
@@ -56,124 +34,37 @@ export default function Index({ auth, followUps, filters }) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Jadwal Follow Up</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Tabs
-                                value={filters.tab}
-                                onValueChange={handleTabChange}
-                                className="mb-4"
-                            >
-                                <TabsList>
-                                    <TabsTrigger value="today">
-                                        Hari Ini
-                                    </TabsTrigger>
-                                    <TabsTrigger value="upcoming">
-                                        Akan Datang
-                                    </TabsTrigger>
-                                    <TabsTrigger value="overdue">
-                                        Terlewat
-                                    </TabsTrigger>
-                                </TabsList>
-                            </Tabs>
-
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Lead</TableHead>
-                                        <TableHead>Jadwal</TableHead>
-                                        <TableHead>Metode</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>PIC</TableHead>
-                                        <TableHead>
-                                            <span className="sr-only">
-                                                Actions
-                                            </span>
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {followUps.data.map((followUp) => (
-                                        <TableRow key={followUp.id}>
-                                            <TableCell>
-                                                <div className="font-medium">
-                                                    {followUp.lead.name}
-                                                </div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {followUp.lead.phone}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                {formatDate(
-                                                    followUp.scheduled_at,
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="secondary">
-                                                    {followUp.method}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge>{followUp.status}</Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                {followUp.user.name}
-                                            </TableCell>
-                                            <TableCell>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger
-                                                        asChild
-                                                    >
-                                                        <Button
-                                                            variant="ghost"
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            <span className="sr-only">
-                                                                Open menu
-                                                            </span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem>
-                                                            Mark as Complete
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            Reschedule
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            View Lead
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
+                    <Card className="p-6">
+                        <div className="mb-4">
+                            <h3 className="text-base font-bold text-gray-900">Jadwal Follow Up</h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-gray-50 text-gray-500 uppercase font-bold text-xs">
+                                    <tr>
+                                        <th className="px-4 py-3">Lead</th>
+                                        <th className="px-4 py-3">Jadwal</th>
+                                        <th className="px-4 py-3">Metode</th>
+                                        <th className="px-4 py-3">Status</th>
+                                        <th className="px-4 py-3">PIC</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {followUps?.data?.map((followUp) => (
+                                        <tr key={followUp.id}>
+                                            <td className="px-4 py-3">
+                                                <div className="font-medium text-gray-900">{followUp.lead?.name}</div>
+                                                <div className="text-xs text-gray-500">{followUp.lead?.phone}</div>
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600">{formatDate(followUp.scheduled_at)}</td>
+                                            <td className="px-4 py-3"><Badge>{followUp.method}</Badge></td>
+                                            <td className="px-4 py-3"><Badge>{followUp.status}</Badge></td>
+                                            <td className="px-4 py-3 text-gray-600">{followUp.user?.name}</td>
+                                        </tr>
                                     ))}
-                                </TableBody>
-                            </Table>
-                            <div className="mt-4">
-                                <Pagination>
-                                    <PaginationContent>
-                                        {followUps.links.map((link, index) => (
-                                            <PaginationItem key={index}>
-                                                <PaginationLink
-                                                    href={link.url}
-                                                    isActive={link.active}
-                                                >
-                                                    <span
-                                                        dangerouslySetInnerHTML={{
-                                                            __html: link.label,
-                                                        }}
-                                                    ></span>
-                                                </PaginationLink>
-                                            </PaginationItem>
-                                        ))}
-                                    </PaginationContent>
-                                </Pagination>
-                            </div>
-                        </CardContent>
+                                </tbody>
+                            </table>
+                        </div>
                     </Card>
                 </div>
             </div>

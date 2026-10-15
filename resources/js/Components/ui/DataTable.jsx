@@ -36,7 +36,7 @@ const DataTable = ({
     };
 
     return (
-        <div className="p-0 overflow-hidden border border-gray-100 rounded-lg">
+        <div className="p-0 overflow-hidden border border-gray-100 rounded-lg min-w-0 w-full">
             {/* --- Filter Section Slot --- */}
             {filterSection && (
                 <div className="p-2 bg-white border-b border-gray-200">
@@ -45,14 +45,14 @@ const DataTable = ({
             )}
 
             {/* --- Table --- */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-w-0">
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 uppercase font-bold text-xs border-b border-gray-200">
                         <tr>
                             {columns.map((col) => (
                                 <th
                                     key={col.header}
-                                    className={`px-6 py-4 ${col.className || ""}`}
+                                    className={`px-4 lg:px-6 py-3.5 whitespace-nowrap ${col.className || ""}`}
                                 >
                                     {col.header}
                                 </th>
@@ -91,7 +91,7 @@ const DataTable = ({
                                     {columns.map((col) => (
                                         <td
                                             key={`${col.accessor}-${row.id}`}
-                                            className={`px-6 py-4 align-top ${col.className || ""}`}
+                                            className={`px-4 lg:px-6 py-3.5 align-top ${col.className || ""}`}
                                         >
                                             {col.render
                                                 ? col.render(row)
@@ -116,8 +116,8 @@ const DataTable = ({
 
             {/* --- Pagination Footer --- */}
             {(isServerSide || data.length > itemsPerPage) && (
-                <div className="p-4 flex items-center justify-between text-sm text-gray-600 border-t border-gray-100 bg-white">
-                    <span>
+                <div className="p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-gray-600 border-t border-gray-100 bg-white">
+                    <span className="text-center sm:text-left">
                         Showing{" "}
                         <span className="font-medium text-gray-900">{startIndex}</span> ke{" "}
                         <span className="font-medium text-gray-900">{endIndex}</span> dari{" "}
